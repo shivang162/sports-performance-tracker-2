@@ -58,7 +58,7 @@ public class PerformanceController implements HttpHandler {
             send(ex,400,fmt.formatError("Invalid number in request"));
         } catch (Exception e) {
             System.err.println("[PerformanceController] "+e.getMessage());
-            send(ex,500,fmt.formatError("Server error: "+e.getMessage()));
+            send(ex,500,fmt.formatError("Server error"));
         }
     }
 

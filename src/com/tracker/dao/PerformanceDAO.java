@@ -28,14 +28,16 @@ public class PerformanceDAO {
         }
     }
 
-    /** All scores ordered by time — used by PerformanceService for trend/avg */
-    public List<Double> getAllScores() {
+    /** Scores for a specific athlete ordered by time — used by PerformanceService for trend/avg */
+    public List<Double> getAllScores(String athlete) {
         List<Double> scores = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
-                 "SELECT score FROM performance_records ORDER BY created_at ASC")) {
-            while (rs.next()) scores.add(rs.getDouble("score"));
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT score FROM performance_records WHERE athlete=? ORDER BY created_at ASC")) {
+            ps.setString(1, athlete);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) scores.add(rs.getDouble("score"));
+            }
         } catch (SQLException e) {
             System.err.println("[PerformanceDAO] getAllScores: " + e.getMessage());
         }
@@ -46,18 +48,19 @@ public class PerformanceDAO {
     public List<Object[]> getAllRecordsWithAthlete() {
         List<Object[]> list = new ArrayList<>();
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(
+             PreparedStatement ps = conn.prepareStatement(
                  "SELECT athlete,distance,time_sec,speed,accuracy,stamina,score,level " +
                  "FROM performance_records ORDER BY created_at ASC")) {
-            while (rs.next()) {
-                list.add(new Object[]{
-                    rs.getString("athlete"),
-                    rs.getDouble("distance"), rs.getDouble("time_sec"),
-                    rs.getDouble("speed"),    rs.getDouble("accuracy"),
-                    rs.getDouble("stamina"),  rs.getDouble("score"),
-                    rs.getString("level")
-                });
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                        rs.getString("athlete"),
+                        rs.getDouble("distance"), rs.getDouble("time_sec"),
+                        rs.getDouble("speed"),    rs.getDouble("accuracy"),
+                        rs.getDouble("stamina"),  rs.getDouble("score"),
+                        rs.getString("level")
+                    });
+                }
             }
         } catch (SQLException e) {
             System.err.println("[PerformanceDAO] getAllRecordsWithAthlete: " + e.getMessage());
@@ -65,12 +68,15 @@ public class PerformanceDAO {
         return list;
     }
 
-    /** Total session count — shown on dashboard */
-    public int getTotalCount() {
+    /** Session count for a specific athlete — shown on dashboard */
+    public int getTotalCount(String athlete) {
         try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT COUNT(*) AS cnt FROM performance_records")) {
-            if (rs.next()) return rs.getInt("cnt");
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT COUNT(*) AS cnt FROM performance_records WHERE athlete=?")) {
+            ps.setString(1, athlete);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("cnt");
+            }
         } catch (SQLException e) {
             System.err.println("[PerformanceDAO] getTotalCount: " + e.getMessage());
         }

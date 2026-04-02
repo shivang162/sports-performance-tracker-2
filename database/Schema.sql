@@ -8,7 +8,7 @@ USE sports_tracker;
 CREATE TABLE IF NOT EXISTS users (
     id         INT AUTO_INCREMENT PRIMARY KEY,
     email      VARCHAR(100) NOT NULL UNIQUE,
-    password   VARCHAR(100) NOT NULL,
+    password   VARCHAR(255) NOT NULL,
     role       VARCHAR(20)  NOT NULL DEFAULT 'athlete',
     created_at TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
 );
@@ -27,8 +27,12 @@ CREATE TABLE IF NOT EXISTS performance_records (
 );
 
 -- Demo user: coach@example.com / safePassword123
+-- Password stored as PBKDF2-HMAC-SHA256 (310000 iterations): "<hex_salt>:<hex_hash>"
+-- To update: re-run Schema.sql after changing the password in UserDAO.hashPassword()
 INSERT IGNORE INTO users (email, password, role)
-VALUES ('coach@example.com', 'safePassword123', 'coach');
+VALUES ('coach@example.com',
+        'a7c8b5d2e1f4a3b0c9d8e7f6a5b4c3d2:ffb8a51b21e125e1279827b3100256f8ce1b3f8bdd4b616403515f9259aa14a5',
+        'coach');
 
 -- Sample records for dashboard demo
 INSERT IGNORE INTO performance_records (athlete, distance, time_sec, speed, accuracy, stamina, score, level) VALUES

@@ -52,13 +52,13 @@ public class PerformanceService {
         return ((b-a)/Math.abs(a))*100.0;
     }
 
-    // 5. Full dashboard stats from DB
-    public DashboardStats getDashboardStats() {
-        List<Double> scores = dao.getAllScores();
+    // 5. Full dashboard stats from DB for a specific athlete
+    public DashboardStats getDashboardStats(String athlete) {
+        List<Double> scores = dao.getAllScores(athlete);
         double avg  = calculateAverage(scores);
         String trend= detectTrend(scores);
         double imp  = calculatePeriodImprovement(scores);
-        int    cnt  = dao.getTotalCount();
+        int    cnt  = dao.getTotalCount(athlete);
         String lev  = lvl.getLevel(avg);
         return new DashboardStats(avg, trend, imp, lev, cnt, scores);
     }

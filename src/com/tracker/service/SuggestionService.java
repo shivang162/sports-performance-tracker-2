@@ -26,13 +26,15 @@ public class SuggestionService {
             return "You are at Excellent level. Maintain consistency and target higher competition difficulty.";
         if (trend.equals("Stable") && level.equals("Good"))
             return "Steady at Good. Push stamina drills harder to break into Excellent territory.";
+        if (trend.equals("Stable") && level.equals("Average"))
+            return "Performance is stable but below Good. Focus on accuracy and stamina consistency.";
+        if (trend.equals("Stable") && level.equals("Needs Improvement"))
+            return "Stable but needs work. Add structured interval training 3 days per week.";
         if (trend.equals("Improving")) {
             double gap = EXCELLENT_THRESHOLD - avg;
             if (gap <= 0) return "Outstanding! You have reached Excellent level. Keep it up!";
             return String.format("Great progress! You are Improving. %.1f more points to reach Excellent.", gap);
         }
-        if (level.equals("Needs Improvement"))
-            return "Focus on interval speed training and accuracy drills 3 times per week.";
         return "Keep training consistently. Regular sessions give more accurate trend analysis.";
     }
 }
