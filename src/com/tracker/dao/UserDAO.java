@@ -51,7 +51,7 @@ public class UserDAO {
         return HexFormat.of().formatHex(salt);
     }
 
-    /** Validate login — queries MySQL, verifies PBKDF2 hashed password. */
+    /** Validate login — queries PostgreSQL, verifies PBKDF2 hashed password. */
     public boolean validateUser(String email, String password) {
         if (email == null || password == null) return false;
         try (Connection conn = DBConnection.getConnection();

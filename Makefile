@@ -1,4 +1,4 @@
-JAR     := lib/mysql-connector-j-9.6.0.jar
+JAR     := lib/postgresql-42.7.4.jar
 SRC_DIR := src
 OUT_DIR := out
 

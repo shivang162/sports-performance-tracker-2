@@ -5,7 +5,7 @@ import java.util.*;
 
 public class PerformanceDAO {
 
-    /** Insert a new session record into MySQL */
+    /** Insert a new session record into PostgreSQL */
     public boolean insertRecord(String athlete, double distance, double timeSec,
                                 double speed, double accuracy, double stamina,
                                 double score, String level) {

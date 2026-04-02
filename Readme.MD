@@ -4,16 +4,16 @@ A full-stack Java web application for tracking and analyzing athlete performance
 
 ## Tech Stack
 - **Backend**: Java (plain HTTP server — no frameworks)
-- **Database**: MySQL via JDBC
+- **Database**: PostgreSQL via JDBC
 - **Frontend**: HTML + CSS + JavaScript + Chart.js
 
 ## Project Structure
 ```
 sports-performance-tracker/
 ├── database/
-│   └── schema.sql              ← Run this first in MySQL
+│   └── schema.sql              ← Run this first in PostgreSQL
 ├── lib/
-│   └── mysql-connector-j.jar   ← Download and place here
+│   └── postgresql-42.7.4.jar   ← Download and place here
 ├── src/com/tracker/
 │   ├── Main.java               ← Entry point, starts HTTP server
 │   ├── controller/
@@ -31,7 +31,7 @@ sports-performance-tracker/
 │   │   ├── PerformanceLevel.java
 │   │   └── RecordFormatter.java      JSON builder
 │   ├── dao/
-│   │   ├── DBConnection.java         MySQL singleton
+│   │   ├── DBConnection.java         PostgreSQL connection factory
 │   │   ├── UserDAO.java
 │   │   └── PerformanceDAO.java
 │   └── frontend/
@@ -56,17 +56,25 @@ sports-performance-tracker/
 
 ## How to Run
 
-### Step 1 — Setup MySQL
+### Step 1 — Setup PostgreSQL
 ```bash
-mysql -u root -p < database/schema.sql
+# Create the database
+psql -U postgres -c "CREATE DATABASE sports_tracker;"
+
+# Load the schema and seed data
+psql -U postgres -d sports_tracker -f database/Schema.sql
 ```
 
-### Step 2 — Add MySQL JDBC Driver
-Download `mysql-connector-j-8.x.x.jar` from https://dev.mysql.com/downloads/connector/j/  
+### Step 2 — Add PostgreSQL JDBC Driver
+Download `postgresql-42.7.4.jar` from https://jdbc.postgresql.org/download/  
 Place it in the `lib/` folder.
 
-### Step 3 — Update your password
-Open `src/com/tracker/dao/DBConnection.java` and set `DB_PASS` to your MySQL password.
+### Step 3 — Set environment variables
+```bash
+export DB_URL=jdbc:postgresql://localhost:5432/sports_tracker
+export DB_USER=postgres
+export DB_PASS=your_password
+```
 
 ### Step 4 — Test DB connection
 ```bash
@@ -76,8 +84,8 @@ You should see: `Connected to Database ✅`
 
 If `make` is not available, run manually:
 ```bash
-javac -cp lib/mysql-connector-j-9.6.0.jar TestDB.java
-java  -cp .:lib/mysql-connector-j-9.6.0.jar TestDB
+javac -cp lib/postgresql-42.7.4.jar TestDB.java
+java  -cp .:lib/postgresql-42.7.4.jar TestDB
 ```
 
 ### Step 5 — Run the server
@@ -92,7 +100,7 @@ Open `src/com/tracker/frontend/login.html`
 **Demo login**: `coach@example.com` / `safePassword123`
 
 ## Features
-- Login & Registration with MySQL
+- Login & Registration with PostgreSQL
 - Save performance sessions (distance, time, accuracy, stamina)
 - Auto-calculated speed and weighted score
 - Dashboard with trend analysis, avg score, and DB-powered stats
