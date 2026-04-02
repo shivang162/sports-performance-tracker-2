@@ -70,13 +70,21 @@ Open `src/com/tracker/dao/DBConnection.java` and set `DB_PASS` to your MySQL pas
 
 ### Step 4 — Test DB connection
 ```bash
-javac -cp lib/mysql-connector-j-*.jar TestDB.java
-java  -cp .:lib/mysql-connector-j-*.jar TestDB
+make test-db
 ```
 You should see: `Connected to Database ✅`
 
-### Step 5 — Run the server (VS Code)
-Add the JAR to your VS Code Java build path, then run `Main.java`.
+If `make` is not available, run manually:
+```bash
+javac -cp lib/mysql-connector-j-9.6.0.jar TestDB.java
+java  -cp .:lib/mysql-connector-j-9.6.0.jar TestDB
+```
+
+### Step 5 — Run the server
+```bash
+make run
+```
+Or in VS Code, add the JAR to your Java build path and run `Main.java`.
 
 ### Step 6 — Open in browser
 Open `src/com/tracker/frontend/login.html`
