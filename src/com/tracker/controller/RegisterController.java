@@ -35,8 +35,10 @@ public class RegisterController implements HttpHandler {
 
     private String json(String body, String key) {
         String s="\""+key+"\""; int i=body.indexOf(s); if(i==-1) return null;
-        int c=body.indexOf(":",i+s.length()),o=body.indexOf("\"",c+1),cl=body.indexOf("\"",o+1);
-        return (o==-1||cl==-1)?null:body.substring(o+1,cl);
+        int c=body.indexOf(":",i+s.length()); if(c==-1) return null;
+        int o=body.indexOf("\"",c+1); if(o==-1) return null;
+        int cl=body.indexOf("\"",o+1);
+        return cl==-1 ? null : body.substring(o+1,cl);
     }
 
     private String err(String msg) { return "{\"success\":false,\"error\":\""+msg+"\"}"; }

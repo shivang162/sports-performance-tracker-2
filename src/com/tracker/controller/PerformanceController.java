@@ -37,7 +37,8 @@ public class PerformanceController implements HttpHandler {
             double stamina  = jsonNum(body,"stamina");
 
             if (athlete==null||athlete.isBlank()) athlete="Unknown";
-            if (timeSec<=0) { send(ex,400,fmt.formatError("Time must be > 0")); return; }
+            if (distance<=0) { send(ex,400,fmt.formatError("Distance must be > 0")); return; }
+            if (timeSec<=0)  { send(ex,400,fmt.formatError("Time must be > 0")); return; }
 
             double speed = distance/timeSec;
 
@@ -63,14 +64,18 @@ public class PerformanceController implements HttpHandler {
 
     private double jsonNum(String body, String key) {
         String s="\""+key+"\""; int i=body.indexOf(s); if(i==-1) throw new NumberFormatException("Missing: "+key);
-        int c=body.indexOf(":",i); int end=body.indexOf(",",c); if(end==-1) end=body.indexOf("}",c);
+        int c=body.indexOf(":",i); if(c==-1) throw new NumberFormatException("Malformed JSON for: "+key);
+        int end=body.indexOf(",",c); if(end==-1) end=body.indexOf("}",c);
+        if(end==-1) throw new NumberFormatException("Malformed JSON for: "+key);
         return Double.parseDouble(body.substring(c+1,end).trim());
     }
 
     private String jsonStr(String body, String key) {
         String s="\""+key+"\""; int i=body.indexOf(s); if(i==-1) return null;
-        int c=body.indexOf(":",i),o=body.indexOf("\"",c+1),cl=body.indexOf("\"",o+1);
-        return (o==-1||cl==-1)?null:body.substring(o+1,cl);
+        int c=body.indexOf(":",i); if(c==-1) return null;
+        int o=body.indexOf("\"",c+1); if(o==-1) return null;
+        int cl=body.indexOf("\"",o+1);
+        return cl==-1 ? null : body.substring(o+1,cl);
     }
 
     private void send(HttpExchange ex, int code, String body) {
