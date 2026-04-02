@@ -50,12 +50,10 @@ function login() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({ email: email, password: pass })
     })
-    .then(function (res) {
-        if (!res.ok) throw new Error("Invalid credentials");
-        return res.text();
-    })
-    .then(function (msg) {
-        showSuc(msg);
+    .then(function (res) { return res.json(); })
+    .then(function (data) {
+        if (!data.success) throw new Error(data.error || "Invalid credentials");
+        showSuc(data.message || "Login Successful");
         sessionStorage.setItem("userEmail", email);
         setTimeout(function () { window.location.href = "dashboard.html"; }, 800);
     })
@@ -93,7 +91,7 @@ function initDashboard() {
  * Updates: totalSessions, avgScore, stat-trend stat cards + suggestion box
  */
 function fetchDashboard() {
-    fetch(BASE_URL + "/dashboard")
+    fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email))
     .then(function (res) { return res.json(); })
     .then(function (data) {
         var s = data.summary;
