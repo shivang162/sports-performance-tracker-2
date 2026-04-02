@@ -5,34 +5,36 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 /**
- * Singleton MySQL connection manager.
- * Change DB_PASS to match your MySQL password.
+ * MySQL connection factory.
+ * Credentials are read from environment variables DB_URL, DB_USER, and DB_PASS.
+ * If the environment variables are not set, the values below are used as defaults.
+ *
+ * Set before running:
+ *   export DB_URL=jdbc:mysql://localhost:3306/sports_tracker
+ *   export DB_USER=root
+ *   export DB_PASS=your_password
  */
 public class DBConnection {
 
-    private static final String DB_URL  = "jdbc:mysql://localhost:3306/sports_tracker";
-    private static final String DB_USER = "root";
-    private static final String DB_PASS = "SHIVANG123@k";   // ← your password
+    private static final String DB_URL  = System.getenv("DB_URL")  != null
+            ? System.getenv("DB_URL")  : "jdbc:mysql://localhost:3306/sports_tracker";
+    private static final String DB_USER = System.getenv("DB_USER") != null
+            ? System.getenv("DB_USER") : "root";
+    private static final String DB_PASS = System.getenv("DB_PASS") != null
+            ? System.getenv("DB_PASS") : "";
 
-    private static Connection connection = null;
-
+    // Not a singleton — a new connection is created per call so that concurrent
+    // request threads each get their own Connection (java.sql.Connection is not
+    // thread-safe and must not be shared across threads).
     public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            try {
-                Class.forName("com.mysql.cj.jdbc.Driver");
-                connection = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
-                System.out.println("[DBConnection] Connected to MySQL.");
-            } catch (ClassNotFoundException e) {
-                throw new SQLException("MySQL driver not found. Add mysql-connector-java JAR to lib/", e);
-            }
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+            return DriverManager.getConnection(DB_URL, DB_USER, DB_PASS);
+        } catch (ClassNotFoundException e) {
+            throw new SQLException("MySQL driver not found. Add mysql-connector-java JAR to lib/", e);
         }
-        return connection;
     }
 
-    public static void closeConnection() {
-        if (connection != null) {
-            try { connection.close(); connection = null; }
-            catch (SQLException e) { System.err.println("[DBConnection] Close error: " + e.getMessage()); }
-        }
-    }
+    /** No-op kept for API compatibility; connections are now closed by callers. */
+    public static void closeConnection() {}
 }

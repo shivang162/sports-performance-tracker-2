@@ -28,9 +28,9 @@ public class Main {
 
         System.out.println("Starting Sports Performance Tracker...");
 
-        // Test DB connection
+        // Test DB connection at startup
         try {
-            DBConnection.getConnection();
+            DBConnection.getConnection().close();
             System.out.println("[Main] Database connected.");
         } catch (Exception e) {
             System.err.println("[Main] DB not available: " + e.getMessage());
@@ -45,6 +45,11 @@ public class Main {
         server.createContext("/records",   new RecordsController());
         server.setExecutor(null);
         server.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            server.stop(0);
+            System.out.println("[Main] Server stopped.");
+        }));
 
         System.out.println("\nServer running → http://localhost:8080");
         System.out.println("  POST /login     — authenticate");

@@ -5,6 +5,8 @@ import java.util.List;
 /** Rule-based training suggestion engine */
 public class SuggestionService {
 
+    private static final double EXCELLENT_THRESHOLD = 85.0;
+
     private final PerformanceService ps = new PerformanceService();
     private final PerformanceLevel   pl = new PerformanceLevel();
 
@@ -25,7 +27,7 @@ public class SuggestionService {
         if (trend.equals("Stable") && level.equals("Good"))
             return "Steady at Good. Push stamina drills harder to break into Excellent territory.";
         if (trend.equals("Improving")) {
-            double gap = 85.0 - avg;
+            double gap = EXCELLENT_THRESHOLD - avg;
             if (gap <= 0) return "Outstanding! You have reached Excellent level. Keep it up!";
             return String.format("Great progress! You are Improving. %.1f more points to reach Excellent.", gap);
         }
