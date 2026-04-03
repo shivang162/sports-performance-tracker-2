@@ -9,12 +9,12 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * POST /save
- * Reads sport/distance/time/accuracy(=m1)/stamina(=m2)/athlete → validates →
- * calculates speed + normalised score + level (sport-specific weights) →
- * saves to SQLite → generates accuracy report → returns JSON
+ * Reads sport/distance/time/athlete → validates → calculates speed →
+ * auto-derives efficiency (normalised speed) → saves to SQLite →
+ * generates efficiency report → returns JSON.
  *
- * The "accuracy" and "stamina" request fields now carry sport-specific metric
- * values (m1 / m2).  They are still stored in the accuracy/stamina DB columns.
+ * M1/M2 inputs have been removed from the UI; the server computes them
+ * automatically: accuracy = normalisedSpeed (0–100), stamina = 0.
  */
 public class PerformanceController implements HttpHandler {
 
@@ -38,10 +38,6 @@ public class PerformanceController implements HttpHandler {
             String sport   = jsonStr(body,"sport");
             double distance= jsonNum(body,"distance");
             double timeSec = jsonNum(body,"time");
-            // "accuracy" field now carries sport-specific metric-1 value (0–100)
-            // "stamina"  field now carries sport-specific metric-2 value (0–100, or 0 if unused)
-            double m1      = jsonNum(body,"accuracy");
-            double m2      = jsonNumOpt(body,"stamina", 0.0);
 
             if (athlete==null||athlete.isBlank()) athlete="Unknown";
             if (sport==null||sport.isBlank())     sport="Running";
@@ -53,12 +49,11 @@ public class PerformanceController implements HttpHandler {
             if (!vs.validateSpeedForSport(speed, sport)) {
                 send(ex,400,fmt.formatError("Speed out of range for this sport")); return;
             }
-            if (!vs.validateMetric(m1)) {
-                send(ex,400,fmt.formatError("Metric 1 must be 0–100")); return;
-            }
-            if (!vs.validateMetric(m2)) {
-                send(ex,400,fmt.formatError("Metric 2 must be 0–100")); return;
-            }
+
+            // Efficiency is auto-calculated from speed (no manual M1/M2 input)
+            double maxSpd = ps.getMaxSpeed(sport);
+            double m1 = maxSpd > 0 ? Math.min(speed / maxSpd * 100.0, 100.0) : 0.0; // speed efficiency %
+            double m2 = 0.0;
 
             double score = ps.calculateScore(speed, m1, m2, sport);
             String level = pl.getLevel(score);
@@ -86,10 +81,6 @@ public class PerformanceController implements HttpHandler {
         int end=body.indexOf(",",c); if(end==-1) end=body.indexOf("}",c);
         if(end==-1) throw new NumberFormatException("Malformed JSON for: "+key);
         return Double.parseDouble(body.substring(c+1,end).trim());
-    }
-
-    private double jsonNumOpt(String body, String key, double def) {
-        try { return jsonNum(body, key); } catch (NumberFormatException e) { return def; }
     }
 
     private String jsonStr(String body, String key) {

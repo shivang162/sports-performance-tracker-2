@@ -9,15 +9,14 @@ import java.util.Map;
  * calculateScore, calculateAverage, detectTrend,
  * calculatePeriodImprovement, getDashboardStats, generateReport
  *
- * Scoring uses sport-specific weights [wSpeed, wM1, wM2].
- * Speed is normalised to 0–100 against a sport-specific benchmark before weighting,
- * so scores always fall in the 0–100 range.
+ * Efficiency is now computed automatically from the athlete's speed relative
+ * to a sport-specific benchmark maximum speed.  Coaches no longer enter
+ * manual metric values; the system derives the efficiency score entirely from
+ * distance and time.
  *
- * Sports with no meaningful speed (Basketball, Tennis) have wSpeed = 0.
- * Sports with only one extra metric (Running, Swimming, Cycling, Weightlifting)
- * have wM2 = 0 and the second metric value is ignored.
- *
- * The "accuracy" DB column stores metric-1 and "stamina" stores metric-2.
+ * Score = (speed / maxSpeed) * 100, clamped to 0–100.
+ * The "accuracy" DB column stores this normalised speed efficiency (0–100).
+ * The "stamina"  DB column is kept for schema compatibility and set to 0.
  */
 public class PerformanceService {
 
@@ -30,7 +29,8 @@ public class PerformanceService {
      *   Running/Swimming/Football → m/s
      *   Cycling                   → km/s  (coach enters km + seconds)
      *   Weightlifting             → kg/rep (weight ÷ reps)
-     *   Basketball/Tennis         → not used (wSpeed = 0)
+     *   Basketball                → shots/sec relative to a pro benchmark
+     *   Tennis                    → rallies/sec relative to a pro benchmark
      */
     private static final Map<String, Double> SPORT_MAX_SPEED = Map.of(
         "Running",       10.5,   // 10.5 m/s ≈ elite sprint upper bound
@@ -44,23 +44,23 @@ public class PerformanceService {
 
     /**
      * Sport-specific scoring weights: [wSpeed, wM1, wM2].
-     * All weights in each row sum to 1.0.
-     * M1/M2 are sport-specific metrics (0–100 range, coach-entered).
+     * Since efficiency is now auto-calculated from speed, all sports use
+     * 100 % speed weight.  M1/M2 inputs have been removed from the UI.
      */
     private static final Map<String, double[]> SPORT_WEIGHTS = Map.of(
-        "Running",       new double[]{0.60, 0.40, 0.00},
-        "Swimming",      new double[]{0.60, 0.40, 0.00},
-        "Basketball",    new double[]{0.00, 0.55, 0.45},
-        "Football",      new double[]{0.30, 0.40, 0.30},
-        "Tennis",        new double[]{0.00, 0.55, 0.45},
-        "Cycling",       new double[]{0.70, 0.30, 0.00},
-        "Weightlifting", new double[]{0.40, 0.60, 0.00}
+        "Running",       new double[]{1.00, 0.00, 0.00},
+        "Swimming",      new double[]{1.00, 0.00, 0.00},
+        "Basketball",    new double[]{1.00, 0.00, 0.00},
+        "Football",      new double[]{1.00, 0.00, 0.00},
+        "Tennis",        new double[]{1.00, 0.00, 0.00},
+        "Cycling",       new double[]{1.00, 0.00, 0.00},
+        "Weightlifting", new double[]{1.00, 0.00, 0.00}
     );
 
     /**
-     * Calculates a 0–100 performance score using normalised speed and
-     * sport-specific metric values (m1, m2).
-     * m1 is stored in the "accuracy" DB column; m2 in "stamina".
+     * Calculates a 0–100 efficiency score using the athlete's normalised speed.
+     * m1 and m2 are retained in the signature for DB compatibility but are
+     * no longer coach-entered; they are set to 0 by the controller.
      */
     public double calculateScore(double speed, double m1, double m2, String sport) {
         double[] w       = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
@@ -102,6 +102,11 @@ public class PerformanceService {
         double b = calculateAverage(scores.subList(mid, scores.size()));
         if (a == 0) return 0.0;
         return ((b-a)/Math.abs(a))*100.0;
+    }
+
+    /** Exposes the max-speed benchmark for a given sport (used by controller for auto-efficiency). */
+    public double getMaxSpeed(String sport) {
+        return SPORT_MAX_SPEED.getOrDefault(sport, 10.0);
     }
 
     // 5. Full dashboard stats from DB for a specific athlete + sport

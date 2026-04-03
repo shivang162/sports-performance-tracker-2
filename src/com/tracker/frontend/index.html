@@ -191,6 +191,29 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .btn-reg:active{transform:scale(.98)}
 .btn-reg:disabled{opacity:.7;cursor:not-allowed}
 
+/* ── Task management ───────────────────────────────────────── */
+.task-form-row{display:grid;grid-template-columns:1fr 1fr 1fr 140px auto;gap:12px;align-items:end;margin-bottom:20px}
+@media(max-width:700px){.task-form-row{grid-template-columns:1fr}}
+.task-list{display:flex;flex-direction:column;gap:10px}
+.task-item{background:#1e1e1e;border:1px solid var(--border);border-radius:10px;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.task-info{flex:1;min-width:0}
+.task-title{font-weight:500;font-size:14px;margin-bottom:3px}
+.task-meta{font-size:12px;color:var(--muted)}
+.task-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
+.task-btn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:6px 12px;border-radius:6px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
+.task-btn:hover{background:var(--card)}
+.task-btn.complete{border-color:rgba(74,222,128,.4);color:var(--green)}
+.task-btn.complete:hover{background:rgba(74,222,128,.08)}
+.task-btn.snooze{border-color:rgba(96,165,250,.4);color:var(--blue)}
+.task-btn.snooze:hover{background:rgba(96,165,250,.08)}
+.task-btn.miss{border-color:rgba(232,58,47,.4);color:#f87171}
+.task-btn.miss:hover{background:rgba(232,58,47,.08)}
+.task-status{font-size:11px;padding:3px 10px;border-radius:12px;white-space:nowrap}
+.ts-pending{background:rgba(245,197,24,.15);color:var(--accent);border:1px solid rgba(245,197,24,.3)}
+.ts-completed{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.ts-missed{background:rgba(232,58,47,.15);color:#f87171;border:1px solid rgba(232,58,47,.3)}
+.ts-snoozed{background:rgba(96,165,250,.15);color:var(--blue);border:1px solid rgba(96,165,250,.3)}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media(max-width:700px){
   .grid,.result-grid,.input-row{grid-template-columns:1fr}
@@ -326,8 +349,9 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         </div>
         <div class="field"><label id="lblDistance">Distance (m)</label><input type="number" id="distance" placeholder="e.g. 400" min="0"></div>
         <div class="field"><label id="lblTime">Time (sec)</label><input type="number" id="time" placeholder="e.g. 60" min="0"></div>
-        <div class="field" id="m1Field"><label id="lblM1">Sprint Form Score (0–100)</label><input type="number" id="m1" placeholder="e.g. 75" min="0" max="100"></div>
-        <div class="field" id="m2Field"><label id="lblM2">Metric 2 (0–100)</label><input type="number" id="m2" placeholder="e.g. 65" min="0" max="100"></div>
+        <div class="field" style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:8px;padding:10px 14px;margin-bottom:14px">
+          <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">⚡ Efficiency auto-calculated from speed</span>
+        </div>
         <button class="btn-save" onclick="saveData()">SAVE SESSION</button>
         <div id="levelBadge"></div>
       </div>
@@ -342,7 +366,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         </div>
         <table>
           <thead>
-            <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thM1">Metric 1</th><th id="thM2">Metric 2</th><th>Score</th><th>Level</th><th></th></tr>
+            <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th><th></th></tr>
           </thead>
           <tbody id="tableBody"></tbody>
         </table>
@@ -350,9 +374,33 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     </div>
     <div id="accuracyReport" style="display:none;margin-top:24px">
       <div class="card full">
-        <div class="card-title">📊 ACCURACY REPORT</div>
+        <div class="card-title">⚡ EFFICIENCY ANALYSIS</div>
         <div id="reportContent"></div>
       </div>
+    </div>
+    <!-- Task Management -->
+    <div class="card full" style="margin-top:24px">
+      <div class="card-title">📋 TASK MANAGEMENT</div>
+      <div class="task-form-row">
+        <div class="field" style="margin-bottom:0">
+          <label>Athlete Account</label>
+          <input type="email" id="taskAthlete" list="athleteList" placeholder="athlete@example.com" autocomplete="off">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Task Title</label>
+          <input type="text" id="taskTitle" placeholder="e.g. 5 km sprint intervals">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Description (optional)</label>
+          <input type="text" id="taskDesc" placeholder="Extra details for the athlete…">
+        </div>
+        <div class="field" style="margin-bottom:0">
+          <label>Due Date</label>
+          <input type="date" id="taskDueDate">
+        </div>
+        <button class="btn-save" onclick="addTask()" style="margin-top:0;align-self:flex-end">ADD TASK</button>
+      </div>
+      <div id="coachTaskList" style="margin-top:8px"><p style="color:var(--muted);font-size:13px">No tasks created yet.</p></div>
     </div>
   </main>
 </div>
@@ -412,11 +460,16 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         <div class="card-title">MY SESSION HISTORY</div>
         <table>
           <thead>
-            <tr><th>#</th><th>Sport</th><th id="aThDist">Distance</th><th>Time</th><th id="aThSpeed">Speed</th><th id="aThAcc">Metric 1</th><th id="aThM2">Metric 2</th><th>Score</th><th>Level</th></tr>
+            <tr><th>#</th><th>Sport</th><th id="aThDist">Distance</th><th>Time</th><th id="aThSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th></tr>
           </thead>
           <tbody id="aTableBody"></tbody>
         </table>
       </div>
+    </div>
+    <!-- My Tasks -->
+    <div class="card full" style="margin-top:24px">
+      <div class="card-title">📋 MY TASKS</div>
+      <div id="athleteTaskList"><p style="color:var(--muted);font-size:13px">No tasks assigned yet.</p></div>
     </div>
   </main>
 </div>
@@ -624,16 +677,8 @@ function onSportChange() {
   var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
   setEl("lblDistance", cfg.dist);
   setEl("lblTime",     cfg.time);
-  setEl("lblM1",       cfg.m1 || "Metric 1 (0–100)");
-  setPlaceholder("m1", cfg.m1Ph);
-  var m2Field = document.getElementById("m2Field");
-  if (m2Field) m2Field.style.display = cfg.showM2 ? "" : "none";
-  if (cfg.showM2) { setEl("lblM2", cfg.m2 || "Metric 2 (0–100)"); setPlaceholder("m2", cfg.m2Ph); }
   setEl("thDistance", cfg.dist.split(" ")[0]);
   setEl("thSpeed",    cfg.speed);
-  setEl("thM1",       cfg.m1 ? cfg.m1.split(" ")[0] : "M1");
-  var thM2El = document.getElementById("thM2");
-  if (thM2El) { thM2El.textContent = cfg.showM2 ? (cfg.m2 ? cfg.m2.split(" ")[0] : "M2") : ""; thM2El.style.display = cfg.showM2 ? "" : "none"; }
   setPlaceholder("distance", cfg.distPh);
   setPlaceholder("time",     cfg.timePh);
   fetchDashboard();
@@ -649,6 +694,7 @@ function initDashboard() {
   if (ai) ai.value = email;
   fetchAthletes();
   onSportChange();
+  fetchCoachTasks();
 }
 
 function fetchAthletes() {
@@ -689,25 +735,22 @@ function fetchDashboard() {
 function saveData() {
   var d    = parseFloat(document.getElementById("distance").value);
   var t    = parseFloat(document.getElementById("time").value);
-  var m1   = parseFloat(document.getElementById("m1").value);
   var sport = getSport();
   var cfg  = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
-  var m2El = document.getElementById("m2");
-  var m2   = (cfg.showM2 && m2El && m2El.value !== "") ? parseFloat(m2El.value) : 0;
   var ai   = document.getElementById("athleteInput");
   var athlete = (ai && ai.value.trim()) ? ai.value.trim() : (sessionStorage.getItem("userEmail") || "Demo Athlete");
-  if (!d || !t || isNaN(m1))             { showToast("Please fill in all required fields.", "red"); return; }
-  if (t <= 0)                            { showToast("Time must be greater than 0.", "red"); return; }
-  if (m1 < 0 || m1 > 100)               { showToast((cfg.m1 || "Metric 1") + " must be 0–100.", "red"); return; }
-  if (cfg.showM2 && (m2 < 0 || m2 > 100)) { showToast((cfg.m2 || "Metric 2") + " must be 0–100.", "red"); return; }
+  if (!d || !t)  { showToast("Please fill in Distance and Time.", "red"); return; }
+  if (d <= 0)    { showToast("Distance must be greater than 0.", "red"); return; }
+  if (t <= 0)    { showToast("Time must be greater than 0.", "red"); return; }
   fetch(BASE_URL + "/save", {
     method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({athlete: athlete, sport: sport, distance: d, time: t, accuracy: m1, stamina: m2})
+    body: JSON.stringify({athlete: athlete, sport: sport, distance: d, time: t})
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
     if (!data.success) { showToast(data.error || "Save failed.", "red"); return; }
-    saveToLocal(athlete, sport, d, t, data.speed, m1, m2, data.score, data.level);
+    var eff = data.report ? (parseFloat(data.report.speedNorm) || 0) : 0;
+    saveToLocal(athlete, sport, d, t, data.speed, eff, 0, data.score, data.level);
     showLevelBadge(data.level, data.score);
     showToast("Saved for " + escapeHtml(athlete) + "! Score: " + parseFloat(data.score).toFixed(1) + " — " + data.level);
     if (data.report) showAccuracyReport(data, cfg);
@@ -716,12 +759,12 @@ function saveData() {
   .catch(function() {
     var speed    = d / t;
     var maxSpd   = cfg.maxSpeed > 0 ? cfg.maxSpeed : 10.0;
-    var normSpd  = Math.min(speed / maxSpd * 100, 100);
-    var score    = Math.min((normSpd * cfg.wSpeed) + (m1 * cfg.wM1) + (m2 * cfg.wM2), 100);
+    var eff      = Math.min(speed / maxSpd * 100, 100);
+    var score    = eff;
     var level    = localLevel(score);
-    saveToLocal(athlete, sport, d, t, speed, m1, m2, score, level);
+    saveToLocal(athlete, sport, d, t, speed, eff, 0, score, level);
     showLevelBadge(level, score);
-    showToast("Saved locally (server offline). Score: " + score.toFixed(1), "red");
+    showToast("Saved locally (server offline). Efficiency: " + eff.toFixed(1) + "%", "red");
     clearForm(); updateUI();
   });
 }
@@ -745,25 +788,21 @@ function showAccuracyReport(data, cfg) {
   var nextHtml = rpt.nextLevel !== "Peak"
     ? "<div style='font-size:13px;color:var(--muted);margin-top:6px'>" + parseFloat(rpt.pointsToNext).toFixed(1) + " pts to reach <strong style='color:var(--text)'>" + escapeHtml(rpt.nextLevel) + "</strong></div>"
     : "<div style='font-size:13px;color:var(--green);margin-top:6px'>🏆 Peak performance!</div>";
-  var bars = "";
-  [{label: "Speed (" + cfg.speed + ")", contrib: rpt.speedContrib, color: "#E83A2F", hide: cfg.wSpeed === 0},
-   {label: cfg.m1 || "Metric 1",        contrib: rpt.m1Contrib,    color: "#F5C518", hide: false},
-   {label: cfg.m2 || "Metric 2",        contrib: rpt.m2Contrib,    color: "#60a5fa", hide: !cfg.showM2}
-  ].forEach(function(item) {
-    if (item.hide) return;
-    var pct = Math.round(parseFloat(item.contrib));
-    bars += "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(item.label) + "</span>" +
-            "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + pct + "%;background:" + item.color + "'></div></div>" +
-            "<span class='report-bar-pct'>" + pct + " pts</span></div>";
-  });
+  var effPct = Math.round(parseFloat(rpt.speedNorm) || 0);
+  var bars =
+    "<div class='report-bar-row'><span class='report-bar-label'>Speed Efficiency (" + escapeHtml(cfg.speed) + ")</span>" +
+    "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + effPct + "%;background:#E83A2F'></div></div>" +
+    "<span class='report-bar-pct'>" + effPct + "%</span></div>";
   reportContent.innerHTML =
     "<div class='report-grid'>" +
-    "<div class='report-item'><div class='report-item-label'>Score</div><div class='report-item-value' style='color:var(--accent)'>" + score + "</div>" +
+    "<div class='report-item'><div class='report-item-label'>Efficiency Score</div><div class='report-item-value' style='color:var(--accent)'>" + score + "</div>" +
     "<div style='margin-top:4px'><span class='level-badge " + levelCls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></div></div>" +
     "<div class='report-item'><div class='report-item-label'>Sessions (this sport)</div><div class='report-item-value' style='color:var(--green)'>" + (rpt.sessionCount || 1) + "</div>" + changeHtml + "</div>" +
     "<div class='report-item'><div class='report-item-label'>Next Goal</div><div class='report-item-value' style='color:var(--blue);font-size:20px'>" + (rpt.nextLevel === "Peak" ? "🏆" : escapeHtml(rpt.nextLevel)) + "</div>" + nextHtml + "</div>" +
+    "<div class='report-item'><div class='report-item-label'>Speed vs Benchmark</div><div class='report-item-value' style='color:var(--text)'>" + effPct + "%</div>" +
+    "<div style='font-size:12px;color:var(--muted);margin-top:4px'>of max benchmark speed</div></div>" +
     "</div>" +
-    "<div style='margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)'>Score Breakdown</div>" +
+    "<div style='margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)'>Efficiency Breakdown</div>" +
     bars;
   reportDiv.style.display = "";
   reportDiv.scrollIntoView({behavior: "smooth", block: "nearest"});
@@ -776,7 +815,7 @@ function updateUI() {
   var tbody   = document.getElementById("tableBody");
   if (!tbody) return;
   if (!records.length) {
-    tbody.innerHTML = "<tr class='empty-row'><td colspan='11'>No " + escapeHtml(sport) + " sessions yet. Add your first one!</td></tr>";
+    tbody.innerHTML = "<tr class='empty-row'><td colspan='10'>No " + escapeHtml(sport) + " sessions yet. Add your first one!</td></tr>";
     setEl("avgSpeed", "0.00"); setEl("bestSpeed", "0.00");
     drawChart([], cfg); return;
   }
@@ -786,12 +825,11 @@ function updateUI() {
     var sportL   = escapeHtml(r.sport);
     var athleteL = escapeHtml(r.athlete || "—");
     var d        = parseFloat(r.d), t = parseFloat(r.t), speed = parseFloat(r.speed);
-    var m1v      = parseFloat(r.accuracy), m2v = parseFloat(r.stamina);
+    var eff      = parseFloat(r.accuracy);
     var score    = parseFloat(r.score), level = escapeHtml(r.level);
     totalSpeed += speed; if (speed > best) best = speed;
-    var cls    = r.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
-    var m2Cell = cfg.showM2 ? "<td>" + m2v + "</td>" : "<td></td>";
-    tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td style='font-size:12px;color:var(--muted)'>" + athleteL + "</td><td>" + sportL + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + m1v + "</td>" + m2Cell + "<td>" + score.toFixed(1) + "</td><td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td><td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td></tr>";
+    var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
+    tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td style='font-size:12px;color:var(--muted)'>" + athleteL + "</td><td>" + sportL + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + eff.toFixed(1) + "%</td><td>" + score.toFixed(1) + "</td><td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td><td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td></tr>";
   });
   setEl("avgSpeed",  (totalSpeed / records.length).toFixed(2));
   setEl("bestSpeed", best.toFixed(2));
@@ -826,7 +864,7 @@ function resetData() {
 }
 
 function clearForm() {
-  ["distance","time","m1","m2"].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
+  ["distance","time"].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
 }
 
 function showLevelBadge(level, score) {
@@ -855,6 +893,7 @@ function initAthlete() {
   var email = sessionStorage.getItem("userEmail") || "";
   setEl("aUserBadge", email);
   aOnSportChange();
+  fetchAthleteTasks();
 }
 
 function aGetSport() {
@@ -867,8 +906,6 @@ function aOnSportChange() {
   var el;
   el = document.getElementById("aThDist");  if (el) el.textContent = cfg.dist.split(" ")[0];
   el = document.getElementById("aThSpeed"); if (el) el.textContent = cfg.speed;
-  el = document.getElementById("aThAcc");   if (el) el.textContent = cfg.m1;
-  el = document.getElementById("aThM2");    if (el) { el.textContent = cfg.showM2 ? cfg.m2 : ""; el.style.display = cfg.showM2 ? "" : "none"; }
   aFetchDashboard();
   aFetchRecords();
 }
@@ -908,34 +945,28 @@ function aFetchRecords() {
     var tbody = document.getElementById("aTableBody");
     if (!tbody) return;
     if (!records.length) {
-      tbody.innerHTML = "<tr class='empty-row'><td colspan='9'>No " + escapeHtml(sport) + " sessions recorded yet.</td></tr>";
+      tbody.innerHTML = "<tr class='empty-row'><td colspan='8'>No " + escapeHtml(sport) + " sessions recorded yet.</td></tr>";
       setEl("aLatestBox", "No sessions recorded yet."); aDrawChart([]); return;
     }
     tbody.innerHTML = "";
     records.forEach(function(r, i) {
-      var cfg_   = A_SPORT_CONFIG[r.sport] || A_SPORT_CONFIG["Running"];
       var level  = escapeHtml(r.level), sport_ = escapeHtml(r.sport);
       var d      = parseFloat(r.distance), t = parseFloat(r.time), speed = parseFloat(r.speed);
-      var m1v    = parseFloat(r.accuracy), m2v = parseFloat(r.stamina), score = parseFloat(r.score);
-      var m2Cell = cfg_.showM2 ? "<td>" + m2v + "</td>" : "<td></td>";
-      tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td>" + sport_ + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + m1v + "</td>" + m2Cell + "<td>" + score.toFixed(1) + "</td><td><span class='level-badge " + aLevelClass(r.level) + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td></tr>";
+      var eff    = parseFloat(r.accuracy), score = parseFloat(r.score);
+      tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td>" + sport_ + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + eff.toFixed(1) + "%</td><td>" + score.toFixed(1) + "</td><td><span class='level-badge " + aLevelClass(r.level) + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td></tr>";
     });
     var last    = records[records.length - 1];
-    var lastCfg = A_SPORT_CONFIG[last.sport] || A_SPORT_CONFIG["Running"];
     var latestEl = document.getElementById("aLatestBox");
     if (latestEl) {
       var lLvl  = escapeHtml(last.level);
-      var m2Row = lastCfg.showM2
-        ? "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>" + escapeHtml(lastCfg.m2) + "</span><span>" + parseFloat(last.stamina) + "</span></div>"
-        : "";
       latestEl.innerHTML =
         "<div style='display:flex;flex-direction:column;gap:10px'>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>" + escapeHtml(last.sport) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Score</span><span style='color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:24px'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge " + aLevelClass(last.level) + "' style='font-size:11px;padding:3px 10px'>" + lLvl + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>" + parseFloat(last.speed).toFixed(2) + "</span></div>" +
-        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>" + escapeHtml(lastCfg.m1) + "</span><span>" + parseFloat(last.accuracy) + "</span></div>" +
-        m2Row + "</div>";
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Efficiency</span><span>" + parseFloat(last.accuracy).toFixed(1) + "%</span></div>" +
+        "</div>";
     }
   })
   .catch(function() { console.warn("[Athlete] /records unavailable"); });
@@ -958,6 +989,127 @@ function aLevelClass(level) {
   if (level === "Good")      return "level-Good";
   if (level === "Average")   return "level-Average";
   return "level-Needs";
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  TASK MANAGEMENT
+// ═══════════════════════════════════════════════════════════════
+
+function addTask() {
+  var athlete = (document.getElementById("taskAthlete") || {}).value.trim();
+  var title   = (document.getElementById("taskTitle")   || {}).value.trim();
+  var desc    = (document.getElementById("taskDesc")    || {}).value.trim();
+  var due     = (document.getElementById("taskDueDate") || {}).value;
+  var coach   = sessionStorage.getItem("userEmail") || "coach@example.com";
+
+  if (!athlete) { showToast("Please enter the athlete's email.", "red"); return; }
+  if (!title)   { showToast("Please enter a task title.",         "red"); return; }
+
+  fetch(BASE_URL + "/tasks", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({coach: coach, athlete: athlete, title: title, description: desc, dueDate: due})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (!d.success) { showToast(d.error || "Failed to add task.", "red"); return; }
+    showToast("Task added for " + escapeHtml(athlete) + "!");
+    document.getElementById("taskAthlete").value = "";
+    document.getElementById("taskTitle").value   = "";
+    document.getElementById("taskDesc").value    = "";
+    document.getElementById("taskDueDate").value = "";
+    fetchCoachTasks();
+  })
+  .catch(function() { showToast("Server not reachable.", "red"); });
+}
+
+function fetchCoachTasks() {
+  var coach = sessionStorage.getItem("userEmail") || "coach@example.com";
+  var el    = document.getElementById("coachTaskList");
+  if (!el) return;
+  fetch(BASE_URL + "/tasks?coach=" + encodeURIComponent(coach))
+  .then(function(r) { return r.json(); })
+  .then(function(tasks) { el.innerHTML = renderCoachTasks(tasks); })
+  .catch(function() { el.innerHTML = "<p style='color:var(--muted);font-size:13px'>Could not load tasks (server offline).</p>"; });
+}
+
+function renderCoachTasks(tasks) {
+  if (!tasks.length) return "<p style='color:var(--muted);font-size:13px'>No tasks created yet.</p>";
+  var html = "<div class='task-list'>";
+  tasks.forEach(function(t) {
+    var statusCls = "ts-" + t.status;
+    var due = t.dueDate ? "<span>Due: " + escapeHtml(t.dueDate) + "</span> · " : "";
+    var snoozeHint = t.status === "snoozed" ? " (snoozed " + t.snoozeCount + "×)" : "";
+    html +=
+      "<div class='task-item'>" +
+      "<div class='task-info'>" +
+      "<div class='task-title'>" + escapeHtml(t.title) + "</div>" +
+      "<div class='task-meta'>" + due + "Athlete: " + escapeHtml(t.athlete) + (t.description ? " · " + escapeHtml(t.description) : "") + "</div>" +
+      "</div>" +
+      "<span class='task-status " + statusCls + "'>" + escapeHtml(t.status) + snoozeHint + "</span>" +
+      "</div>";
+  });
+  html += "</div>";
+  return html;
+}
+
+function fetchAthleteTasks() {
+  var athlete = sessionStorage.getItem("userEmail") || "";
+  var el      = document.getElementById("athleteTaskList");
+  if (!el || !athlete) return;
+  fetch(BASE_URL + "/tasks?athlete=" + encodeURIComponent(athlete))
+  .then(function(r) { return r.json(); })
+  .then(function(tasks) { el.innerHTML = renderAthleteTasks(tasks); })
+  .catch(function() { el.innerHTML = "<p style='color:var(--muted);font-size:13px'>Could not load tasks (server offline).</p>"; });
+}
+
+function renderAthleteTasks(tasks) {
+  if (!tasks.length) return "<p style='color:var(--muted);font-size:13px'>No tasks assigned yet.</p>";
+  var html = "<div class='task-list'>";
+  tasks.forEach(function(t) {
+    var statusCls = "ts-" + t.status;
+    var due = t.dueDate ? "<span>Due: " + escapeHtml(t.dueDate) + "</span> · " : "";
+    var snoozeHint = t.status === "snoozed" ? " (" + t.snoozeCount + "/3 snoozes)" : "";
+    var actions = "";
+    if (t.status !== "completed" && t.status !== "missed") {
+      actions =
+        "<div class='task-actions'>" +
+        "<button class='task-btn complete' onclick='updateTask(" + t.id + ",\"completed\")'>✅ Complete</button>" +
+        "<button class='task-btn snooze'   onclick='updateTask(" + t.id + ",\"snoozed\")'>💤 Snooze</button>" +
+        "<button class='task-btn miss'     onclick='updateTask(" + t.id + ",\"missed\")'>❌ Miss</button>" +
+        "</div>";
+    }
+    html +=
+      "<div class='task-item'>" +
+      "<div class='task-info'>" +
+      "<div class='task-title'>" + escapeHtml(t.title) + "</div>" +
+      "<div class='task-meta'>" + due + "From: " + escapeHtml(t.coach) + (t.description ? " · " + escapeHtml(t.description) : "") + "</div>" +
+      "</div>" +
+      "<div style='display:flex;flex-direction:column;align-items:flex-end;gap:8px'>" +
+      "<span class='task-status " + statusCls + "'>" + escapeHtml(t.status) + snoozeHint + "</span>" +
+      actions +
+      "</div>" +
+      "</div>";
+  });
+  html += "</div>";
+  return html;
+}
+
+function updateTask(id, action) {
+  fetch(BASE_URL + "/tasks/update", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({id: String(id), action: action})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (!d.success) { showToast(d.error || "Update failed.", "red"); return; }
+    var msg = action === "completed" ? "Task marked complete! ✅"
+            : action === "missed"    ? "Task marked as missed. ❌"
+            : d.status === "missed"  ? "Task auto-missed after 3 snoozes! ❌"
+            : "Task snoozed 💤 (" + (d.snoozeCount || "") + ")";
+    showToast(msg, action === "completed" ? "green" : "red");
+    fetchAthleteTasks();
+  })
+  .catch(function() { showToast("Server not reachable.", "red"); });
 }
 
 // ═══════════════════════════════════════════════════════════════

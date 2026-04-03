@@ -20,11 +20,23 @@ CREATE TABLE IF NOT EXISTS performance_records (
     distance   REAL     NOT NULL,
     time_sec   REAL     NOT NULL,
     speed      REAL     NOT NULL,
-    accuracy   REAL     NOT NULL,
-    stamina    REAL     NOT NULL,
+    accuracy   REAL     NOT NULL,  -- auto-calculated speed efficiency (0-100)
+    stamina    REAL     NOT NULL,  -- reserved for future use, stored as 0
     score      REAL     NOT NULL,
     level      TEXT     NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS tasks (
+    id           INTEGER  PRIMARY KEY AUTOINCREMENT,
+    coach        TEXT     NOT NULL,
+    athlete      TEXT     NOT NULL,
+    title        TEXT     NOT NULL,
+    description  TEXT     NOT NULL DEFAULT '',
+    due_date     TEXT     NOT NULL DEFAULT '',
+    status       TEXT     NOT NULL DEFAULT 'pending',
+    snooze_count INTEGER  NOT NULL DEFAULT 0,
+    created_at   DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Demo user: coach@example.com / safePassword123

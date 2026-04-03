@@ -43,6 +43,7 @@ public class Main {
         server.createContext("/dashboard", new DashboardController());
         server.createContext("/records",   new RecordsController());
         server.createContext("/athletes",  new AthleteListController());
+        server.createContext("/tasks",     new TaskController());
         server.setExecutor(null);
         server.start();
 
@@ -58,6 +59,9 @@ public class Main {
         System.out.println("  GET  /dashboard — stats + suggestion");
         System.out.println("  GET  /records   — all records");
         System.out.println("  GET  /athletes  — list athlete accounts");
+        System.out.println("  GET  /tasks     — list tasks (coach or athlete)");
+        System.out.println("  POST /tasks     — create task");
+        System.out.println("  POST /tasks/update — update task status");
         System.out.println("\nOpen frontend/index.html in your browser.");
     }
 }
