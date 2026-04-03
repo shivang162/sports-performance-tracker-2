@@ -37,11 +37,7 @@ sports-performance-tracker/
 │   │   ├── UserDAO.java
 │   │   └── PerformanceDAO.java
 │   └── frontend/
-│       ├── login.html
-│       ├── register.html
-│       ├── dashboard.html
-│       ├── compare.html
-│       └── js/script.js
+│       └── index.html              ← Single-file SPA (login · register · dashboard · athlete · compare)
 ├── TestDB.java     ← Run to verify DB connection
 └── TestLogic.java  ← Run to verify all service logic
 
@@ -74,7 +70,7 @@ make run
 Or in VS Code, add the JARs in `lib/` to your Java build path and run `Main.java`.
 
 ### Step 3 — Open in browser
-Open `src/com/tracker/frontend/login.html`
+Open `src/com/tracker/frontend/index.html`
 
 **Demo login**: `coach@example.com` / `safePassword123`
 
