@@ -191,7 +191,18 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .btn-reg:active{transform:scale(.98)}
 .btn-reg:disabled{opacity:.7;cursor:not-allowed}
 
-/* ── Task management ───────────────────────────────────────── */
+/* ── Sport metrics panel ────────────────────────────────────── */
+.sport-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.sport-metric-col{display:flex;flex-direction:column;gap:10px}
+.sport-metric-heading{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.sport-metric-row{display:flex;align-items:center;gap:10px;font-size:13px}
+.sport-metric-label{min-width:170px;color:var(--text);flex-shrink:0}
+.sport-metric-track{flex:1;height:7px;background:#1e1e1e;border-radius:4px;overflow:hidden;min-width:60px}
+.sport-metric-fill{height:100%;border-radius:4px;transition:width .5s ease}
+.sport-metric-pct{font-size:12px;min-width:36px;text-align:right;color:var(--muted)}
+.sport-panel-bench{font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.sport-panel-bench span{color:var(--text)}
+
 .task-form-row{display:grid;grid-template-columns:1fr 1fr 1fr 140px auto;gap:12px;align-items:end;margin-bottom:20px}
 @media(max-width:700px){.task-form-row{grid-template-columns:1fr}}
 .task-list{display:flex;flex-direction:column;gap:10px}
@@ -328,6 +339,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         <option value="Weightlifting">🏋️ Weightlifting</option>
       </select>
     </div>
+    <!-- Sport Metrics Overview Panel -->
+    <div class="card full" id="sportMetricsPanel" style="margin-bottom:20px">
+      <div class="card-title" id="sportPanelTitle" style="margin-bottom:16px">🏃 RUNNING — SCORE BREAKDOWN</div>
+      <div class="sport-panel" id="sportPanelContent"></div>
+    </div>
     <div class="suggestion" id="suggestionBox">
       <span class="suggestion-icon">💡</span>
       <span class="suggestion-text" id="suggestionText"></span>
@@ -349,9 +365,8 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         </div>
         <div class="field"><label id="lblDistance">Distance (m)</label><input type="number" id="distance" placeholder="e.g. 400" min="0"></div>
         <div class="field"><label id="lblTime">Time (sec)</label><input type="number" id="time" placeholder="e.g. 60" min="0"></div>
-        <div class="field" style="background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.2);border-radius:8px;padding:10px 14px;margin-bottom:14px">
-          <span style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--accent)">⚡ Efficiency auto-calculated from speed</span>
-        </div>
+        <div class="field" id="fieldM1"><label id="lblM1">Sprint Form Score (0–100)</label><input type="number" id="m1Input" placeholder="e.g. 75" min="0" max="100" step="0.1"></div>
+        <div class="field" id="fieldM2" style="display:none"><label id="lblM2">Metric 2 (0–100)</label><input type="number" id="m2Input" placeholder="e.g. 65" min="0" max="100" step="0.1"></div>
         <button class="btn-save" onclick="saveData()">SAVE SESSION</button>
         <div id="levelBadge"></div>
       </div>
@@ -435,6 +450,11 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
         <option value="Cycling">🚴 Cycling</option>
         <option value="Weightlifting">🏋️ Weightlifting</option>
       </select>
+    </div>
+    <!-- Sport Metrics Overview Panel (athlete view) -->
+    <div class="card full" id="aSportMetricsPanel" style="margin-bottom:20px">
+      <div class="card-title" id="aSportPanelTitle" style="margin-bottom:16px">🏃 RUNNING — SCORE BREAKDOWN</div>
+      <div class="sport-panel" id="aSportPanelContent"></div>
     </div>
     <div class="suggestion" id="aSuggestionBox">
       <span class="suggestion-icon">💡</span>
@@ -657,15 +677,109 @@ function register() {
 //  DASHBOARD PAGE  (coach / guest)
 // ═══════════════════════════════════════════════════════════════
 
-var SPORT_CONFIG = {
-  "Running":       { dist:"Distance (m)",        distPh:"400",   time:"Time (sec)",      timePh:"60",   m1:"Sprint Form Score (0–100)",      m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:10.5  },
-  "Swimming":      { dist:"Distance (m)",        distPh:"100",   time:"Time (sec)",      timePh:"90",   m1:"Stroke Efficiency (0–100)",       m1Ph:"70", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:2.5   },
-  "Basketball":    { dist:"Shots Attempted",     distPh:"20",    time:"Duration (sec)",  timePh:"2880", m1:"Shooting Efficiency (0–100)",     m1Ph:"60", showM2:true,  m2:"Defense Rating (0–100)",   m2Ph:"65", speed:"Shot Rate",     wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0   },
-  "Football":      { dist:"Distance Covered (m)",distPh:"10000", time:"Duration (sec)",  timePh:"5400", m1:"Pass Completion % (0–100)",       m1Ph:"75", showM2:true,  m2:"Fitness Score (0–100)",    m2Ph:"70", speed:"Speed (m/s)",   wSpeed:0.30, wM1:0.40, wM2:0.30, maxSpeed:3.0   },
-  "Tennis":        { dist:"Rallies",             distPh:"20",    time:"Duration (sec)",  timePh:"3600", m1:"First Serve % (0–100)",           m1Ph:"60", showM2:true,  m2:"Footwork Score (0–100)",   m2Ph:"70", speed:"Rally Pace",    wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0   },
-  "Cycling":       { dist:"Distance (km)",       distPh:"40",    time:"Time (sec)",      timePh:"3600", m1:"Cadence Score (0–100)",           m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (km/s)",  wSpeed:0.70, wM1:0.30, wM2:0.00, maxSpeed:0.015 },
-  "Weightlifting": { dist:"Weight (kg)",         distPh:"80",    time:"Reps",            timePh:"8",    m1:"Technique Score (0–100)",         m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Load (kg/rep)", wSpeed:0.40, wM1:0.60, wM2:0.00, maxSpeed:25.0  }
+var SPORT_ICONS = {
+  "Running":"🏃","Swimming":"🏊","Basketball":"🏀",
+  "Football":"⚽","Tennis":"🎾","Cycling":"🚴","Weightlifting":"🏋️"
 };
+
+var SPORT_CONFIG = {
+  "Running":       { dist:"Distance (m)",        distPh:"400",   time:"Time (sec)",      timePh:"60",   m1:"Sprint Form Score (0–100)",      m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:10.5,  bench:"10.5 m/s (elite sprint)" },
+  "Swimming":      { dist:"Distance (m)",        distPh:"100",   time:"Time (sec)",      timePh:"90",   m1:"Stroke Efficiency (0–100)",       m1Ph:"70", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:2.5,   bench:"2.5 m/s (elite swimmer)" },
+  "Basketball":    { dist:"Shots Attempted",     distPh:"20",    time:"Duration (sec)",  timePh:"2880", m1:"Shooting Efficiency (0–100)",     m1Ph:"60", showM2:true,  m2:"Defense Rating (0–100)",   m2Ph:"65", speed:"Shot Rate",     wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0,   bench:"N/A (skill-based scoring)" },
+  "Football":      { dist:"Distance Covered (m)",distPh:"10000", time:"Duration (sec)",  timePh:"5400", m1:"Pass Completion % (0–100)",       m1Ph:"75", showM2:true,  m2:"Fitness Score (0–100)",    m2Ph:"70", speed:"Speed (m/s)",   wSpeed:0.30, wM1:0.40, wM2:0.30, maxSpeed:3.0,   bench:"3.0 m/s (avg field coverage)" },
+  "Tennis":        { dist:"Rallies",             distPh:"20",    time:"Duration (sec)",  timePh:"3600", m1:"First Serve % (0–100)",           m1Ph:"60", showM2:true,  m2:"Footwork Score (0–100)",   m2Ph:"70", speed:"Rally Pace",    wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0,   bench:"N/A (skill-based scoring)" },
+  "Cycling":       { dist:"Distance (km)",       distPh:"40",    time:"Time (sec)",      timePh:"3600", m1:"Cadence Score (0–100)",           m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (km/s)",  wSpeed:0.70, wM1:0.30, wM2:0.00, maxSpeed:0.015, bench:"0.015 km/s (≈54 km/h elite)" },
+  "Weightlifting": { dist:"Weight (kg)",         distPh:"80",    time:"Reps",            timePh:"8",    m1:"Technique Score (0–100)",         m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Load (kg/rep)", wSpeed:0.40, wM1:0.60, wM2:0.00, maxSpeed:25.0,  bench:"25 kg/rep (elite single-rep load)" }
+};
+
+function updateSportPanel(sport, titleId, contentId) {
+  var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+  var icon  = SPORT_ICONS[sport] || "🏅";
+  var title = document.getElementById(titleId);
+  var content = document.getElementById(contentId);
+  if (!title || !content) return;
+  title.textContent = icon + " " + sport.toUpperCase() + " — SCORE BREAKDOWN";
+
+  var metrics = [];
+  if (cfg.wSpeed > 0) {
+    metrics.push({label: cfg.speed, weight: cfg.wSpeed, color: "#E83A2F", note: "auto-calculated"});
+  }
+  metrics.push({label: cfg.m1.replace(" (0–100)", ""), weight: cfg.wM1, color: "#F5C518", note: "coach-entered"});
+  if (cfg.showM2 && cfg.m2) {
+    metrics.push({label: cfg.m2.replace(" (0–100)", ""), weight: cfg.wM2, color: "#60a5fa", note: "coach-entered"});
+  }
+
+  var metricsHtml = "<div class='sport-metric-col'>" +
+    "<div class='sport-metric-heading'>Metric Weights</div>";
+  metrics.forEach(function(m) {
+    var pct = Math.round(m.weight * 100);
+    metricsHtml +=
+      "<div class='sport-metric-row'>" +
+      "<span class='sport-metric-label'>" + escapeHtml(m.label) + " <span style='font-size:11px;color:var(--muted)'>(" + m.note + ")</span></span>" +
+      "<div class='sport-metric-track'><div class='sport-metric-fill' style='width:" + pct + "%;background:" + m.color + "'></div></div>" +
+      "<span class='sport-metric-pct'>" + pct + "%</span>" +
+      "</div>";
+  });
+  if (cfg.wSpeed > 0) {
+    metricsHtml += "<div class='sport-panel-bench'>⚡ Speed benchmark: <span>" + escapeHtml(cfg.bench) + "</span></div>";
+  } else {
+    metricsHtml += "<div class='sport-panel-bench'>📊 Scoring is <span>skill-metric based</span> — speed is tracked but does not affect the score</div>";
+  }
+  metricsHtml += "</div>";
+
+  // Second column: sport-specific tips per metric
+  var tipsHtml = "<div class='sport-metric-col'>" +
+    "<div class='sport-metric-heading'>What to enter</div>";
+  var tips = getSportMetricTips(sport, cfg);
+  tips.forEach(function(tip) {
+    tipsHtml += "<div style='margin-bottom:10px'>" +
+      "<div style='font-size:13px;color:var(--text);margin-bottom:2px'>" + escapeHtml(tip.field) + "</div>" +
+      "<div style='font-size:12px;color:var(--muted);line-height:1.5'>" + escapeHtml(tip.desc) + "</div>" +
+      "</div>";
+  });
+  tipsHtml += "</div>";
+
+  content.innerHTML = metricsHtml + tipsHtml;
+}
+
+function getSportMetricTips(sport, cfg) {
+  var tips = [];
+  tips.push({field: cfg.dist, desc: {
+    "Running": "Total distance covered in the run session.",
+    "Swimming": "Length of the swim in metres.",
+    "Basketball": "Total shot attempts during the session.",
+    "Football": "Total distance covered on the pitch.",
+    "Tennis": "Number of rally exchanges played.",
+    "Cycling": "Total ride distance in kilometres.",
+    "Weightlifting": "Weight lifted in kilograms."
+  }[sport] || "Enter the primary distance/quantity measure."});
+  tips.push({field: cfg.time, desc: {
+    "Running": "Total time in seconds.",
+    "Swimming": "Time to complete the distance in seconds.",
+    "Basketball": "Session or game duration in seconds.",
+    "Football": "Match or session duration in seconds.",
+    "Tennis": "Match or session duration in seconds.",
+    "Cycling": "Ride time in seconds.",
+    "Weightlifting": "Number of repetitions performed."
+  }[sport] || "Enter the time or repetition count."});
+  tips.push({field: cfg.m1.replace(" (0–100)", ""), desc: {
+    "Running": "Coach assessment of sprint mechanics, posture and cadence (0–100).",
+    "Swimming": "Stroke efficiency covering technique, turns and breathing (0–100).",
+    "Basketball": "Shooting accuracy and decision-making rating (0–100).",
+    "Football": "Percentage of passes completed successfully (0–100).",
+    "Tennis": "First-serve success rate (0–100).",
+    "Cycling": "Pedal cadence consistency and power output score (0–100).",
+    "Weightlifting": "Form, depth and control rating assessed by coach (0–100)."
+  }[sport] || "Coach-assessed skill score (0–100)."});
+  if (cfg.showM2 && cfg.m2) {
+    tips.push({field: cfg.m2.replace(" (0–100)", ""), desc: {
+      "Basketball": "Defensive effort, positioning and blocks rating (0–100).",
+      "Football": "Aerobic fitness and endurance assessment (0–100).",
+      "Tennis": "Court coverage, split-step and recovery footwork (0–100)."
+    }[sport] || "Secondary coach-assessed skill score (0–100)."});
+  }
+  return tips;
+}
 
 function getSport() {
   var s = document.getElementById("sportSelect");
@@ -681,6 +795,17 @@ function onSportChange() {
   setEl("thSpeed",    cfg.speed);
   setPlaceholder("distance", cfg.distPh);
   setPlaceholder("time",     cfg.timePh);
+  // m1 is always shown — every sport has exactly one primary skill metric
+  setEl("lblM1", cfg.m1);
+  setPlaceholder("m1Input", cfg.m1Ph);
+  // m2 is sport-specific (Basketball, Football, Tennis only)
+  var f2 = document.getElementById("fieldM2");
+  if (f2) f2.style.display = cfg.showM2 ? "" : "none";
+  if (cfg.showM2 && cfg.m2) {
+    setEl("lblM2", cfg.m2);
+    setPlaceholder("m2Input", cfg.m2Ph);
+  }
+  updateSportPanel(sport, "sportPanelTitle", "sportPanelContent");
   fetchDashboard();
   updateUI();
 }
@@ -739,12 +864,20 @@ function saveData() {
   var cfg  = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
   var ai   = document.getElementById("athleteInput");
   var athlete = (ai && ai.value.trim()) ? ai.value.trim() : (sessionStorage.getItem("userEmail") || "Demo Athlete");
+  var m1El = document.getElementById("m1Input");
+  var m2El = document.getElementById("m2Input");
+  // m1 is always present for every sport; m2 is only used when cfg.showM2 is true
+  var m1 = m1El && m1El.value !== "" ? parseFloat(m1El.value) : 0;
+  var m2 = (m2El && m2El.value !== "" && cfg.showM2) ? parseFloat(m2El.value) : 0;
   if (!d || !t)  { showToast("Please fill in Distance and Time.", "red"); return; }
   if (d <= 0)    { showToast("Distance must be greater than 0.", "red"); return; }
   if (t <= 0)    { showToast("Time must be greater than 0.", "red"); return; }
+  var m1Label = cfg.m1.replace(" (0–100)", "");
+  if (isNaN(m1) || m1 < 0 || m1 > 100) { showToast(m1Label + " must be between 0 and 100.", "red"); return; }
+  if (cfg.showM2 && (isNaN(m2) || m2 < 0 || m2 > 100)) { showToast(((cfg.m2 || "Metric 2").replace(" (0–100)", "")) + " must be between 0 and 100.", "red"); return; }
   fetch(BASE_URL + "/save", {
     method: "POST", headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({athlete: athlete, sport: sport, distance: d, time: t})
+    body: JSON.stringify({athlete: athlete, sport: sport, distance: d, time: t, m1: m1, m2: m2})
   })
   .then(function(res) { return res.json(); })
   .then(function(data) {
@@ -759,12 +892,13 @@ function saveData() {
   .catch(function() {
     var speed    = d / t;
     var maxSpd   = cfg.maxSpeed > 0 ? cfg.maxSpeed : 10.0;
-    var eff      = Math.min(speed / maxSpd * 100, 100);
-    var score    = eff;
+    var normSpd  = Math.min(speed / maxSpd * 100, 100);
+    var score    = Math.min(Math.max(cfg.wSpeed * normSpd + cfg.wM1 * m1 + cfg.wM2 * m2, 0), 100);
+    var eff      = normSpd;
     var level    = localLevel(score);
     saveToLocal(athlete, sport, d, t, speed, eff, 0, score, level);
     showLevelBadge(level, score);
-    showToast("Saved locally (server offline). Efficiency: " + eff.toFixed(1) + "%", "red");
+    showToast("Saved locally (server offline). Score: " + score.toFixed(1), "red");
     clearForm(); updateUI();
   });
 }
@@ -789,10 +923,25 @@ function showAccuracyReport(data, cfg) {
     ? "<div style='font-size:13px;color:var(--muted);margin-top:6px'>" + parseFloat(rpt.pointsToNext).toFixed(1) + " pts to reach <strong style='color:var(--text)'>" + escapeHtml(rpt.nextLevel) + "</strong></div>"
     : "<div style='font-size:13px;color:var(--green);margin-top:6px'>🏆 Peak performance!</div>";
   var effPct = Math.round(parseFloat(rpt.speedNorm) || 0);
-  var bars =
-    "<div class='report-bar-row'><span class='report-bar-label'>Speed Efficiency (" + escapeHtml(cfg.speed) + ")</span>" +
-    "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + effPct + "%;background:#E83A2F'></div></div>" +
-    "<span class='report-bar-pct'>" + effPct + "%</span></div>";
+  var bars = "";
+  if (cfg.wSpeed > 0) {
+    bars +=
+      "<div class='report-bar-row'><span class='report-bar-label'>Speed Efficiency (" + escapeHtml(cfg.speed) + ")</span>" +
+      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + effPct + "%;background:#E83A2F'></div></div>" +
+      "<span class='report-bar-pct'>" + effPct + "%</span></div>";
+  }
+  var m1Pct = Math.round(parseFloat(rpt.m1Contrib) || 0);
+  var m2Pct = Math.round(parseFloat(rpt.m2Contrib) || 0);
+  bars +=
+    "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(cfg.m1.replace(" (0–100)","")) + "</span>" +
+    "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m1Pct, 100) + "%;background:#F5C518'></div></div>" +
+    "<span class='report-bar-pct'>" + (parseFloat(rpt.m1Contrib || 0)).toFixed(1) + "</span></div>";
+  if (cfg.showM2 && cfg.m2) {
+    bars +=
+      "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(cfg.m2.replace(" (0–100)","")) + "</span>" +
+      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m2Pct, 100) + "%;background:#60a5fa'></div></div>" +
+      "<span class='report-bar-pct'>" + (parseFloat(rpt.m2Contrib || 0)).toFixed(1) + "</span></div>";
+  }
   reportContent.innerHTML =
     "<div class='report-grid'>" +
     "<div class='report-item'><div class='report-item-label'>Efficiency Score</div><div class='report-item-value' style='color:var(--accent)'>" + score + "</div>" +
@@ -864,7 +1013,7 @@ function resetData() {
 }
 
 function clearForm() {
-  ["distance","time"].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
+  ["distance","time","m1Input","m2Input"].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
 }
 
 function showLevelBadge(level, score) {
@@ -902,10 +1051,12 @@ function aGetSport() {
 }
 
 function aOnSportChange() {
+  var sport = aGetSport();
   var cfg = A_SPORT_CONFIG[aGetSport()] || A_SPORT_CONFIG["Running"];
   var el;
   el = document.getElementById("aThDist");  if (el) el.textContent = cfg.dist.split(" ")[0];
   el = document.getElementById("aThSpeed"); if (el) el.textContent = cfg.speed;
+  updateSportPanel(sport, "aSportPanelTitle", "aSportPanelContent");
   aFetchDashboard();
   aFetchRecords();
 }
