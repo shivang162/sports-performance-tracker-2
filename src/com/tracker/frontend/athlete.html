@@ -213,6 +213,14 @@ window.onload = function(){
   onSportChange();
 };
 
+// ── Level → CSS class (whitelist, no string concatenation) ─────
+function levelClass(level){
+  if(level==="Excellent")       return "level-Excellent";
+  if(level==="Good")            return "level-Good";
+  if(level==="Average")         return "level-Average";
+  return "level-Needs";
+}
+
 // ── GET /dashboard?athlete=X&sport=Y ──────────────────────────
 function fetchDashboard(){
   var email = sessionStorage.getItem("userEmail") || "";
@@ -234,8 +242,7 @@ function fetchDashboard(){
 
     var lvlEl = document.getElementById("statLevel");
     if(lvlEl && s.level){
-      var cls = s.level==="Needs Improvement"?"level-Needs":"level-"+s.level;
-      lvlEl.innerHTML = "<span class='level-badge "+escapeHtml(cls)+"'>"+escapeHtml(s.level)+"</span>";
+      lvlEl.innerHTML = "<span class='level-badge "+levelClass(s.level)+"'>"+escapeHtml(s.level)+"</span>";
     }
 
     if(data.suggestion){
@@ -254,12 +261,12 @@ function fetchDashboard(){
   });
 }
 
-// ── GET /records?athlete=X → render table ──────────────────────
+// ── GET /records?athlete=X&sport=Y → render table ───────────────
 function fetchRecords(){
   var email = sessionStorage.getItem("userEmail") || "";
   var sport = getSport();
   if(!email){ return; }
-  fetch(BASE_URL + "/records?athlete=" + encodeURIComponent(email))
+  fetch(BASE_URL + "/records?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
   .then(function(r){ return r.json(); })
   .then(function(all){
     var records = all.filter(function(r){ return r.sport === sport; });
@@ -283,7 +290,6 @@ function fetchRecords(){
       var acc    = parseFloat(r.accuracy);
       var sta    = parseFloat(r.stamina);
       var score  = parseFloat(r.score);
-      var cls    = r.level==="Needs Improvement"?"level-Needs":"level-"+level;
       tbody.innerHTML +=
         "<tr>"+
         "<td>"+(i+1)+"</td>"+
@@ -294,7 +300,7 @@ function fetchRecords(){
         "<td>"+acc+"</td>"+
         "<td>"+sta+"</td>"+
         "<td>"+score.toFixed(1)+"</td>"+
-        "<td><span class='level-badge "+cls+"' style='font-size:11px;padding:3px 10px'>"+level+"</span></td>"+
+        "<td><span class='level-badge "+levelClass(r.level)+"' style='font-size:11px;padding:3px 10px'>"+level+"</span></td>"+
         "</tr>";
     });
 
@@ -303,12 +309,11 @@ function fetchRecords(){
     var latestEl = document.getElementById("latestBox");
     if(latestEl){
       var lLvl = escapeHtml(last.level);
-      var lCls = last.level==="Needs Improvement"?"level-Needs":"level-"+lLvl;
       latestEl.innerHTML =
         "<div style='display:flex;flex-direction:column;gap:10px'>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>"+escapeHtml(last.sport)+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Score</span><span style='color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:24px'>"+parseFloat(last.score).toFixed(1)+"</span></div>"+
-        "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge "+lCls+"' style='font-size:11px;padding:3px 10px'>"+lLvl+"</span></div>"+
+        "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge "+levelClass(last.level)+"' style='font-size:11px;padding:3px 10px'>"+lLvl+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>"+parseFloat(last.speed).toFixed(2)+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Accuracy</span><span>"+parseFloat(last.accuracy)+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Stamina</span><span>"+parseFloat(last.stamina)+"</span></div>"+

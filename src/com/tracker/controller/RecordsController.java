@@ -26,9 +26,16 @@ public class RecordsController implements HttpHandler {
         if (!ex.getRequestMethod().equalsIgnoreCase("GET"))    { send(ex,405,"{\"error\":\"Method not allowed\"}"); return; }
         try {
             String athleteFilter = queryParam(ex.getRequestURI().getRawQuery(), "athlete");
-            List<Object[]> records = (athleteFilter != null && !athleteFilter.isBlank())
-                ? dao.getRecordsByAthlete(athleteFilter)
-                : dao.getAllRecordsWithAthlete();
+            String sportFilter   = queryParam(ex.getRequestURI().getRawQuery(), "sport");
+            List<Object[]> records;
+            if (athleteFilter != null && !athleteFilter.isBlank() &&
+                sportFilter   != null && !sportFilter.isBlank()) {
+                records = dao.getRecordsByAthleteSport(athleteFilter, sportFilter);
+            } else if (athleteFilter != null && !athleteFilter.isBlank()) {
+                records = dao.getRecordsByAthlete(athleteFilter);
+            } else {
+                records = dao.getAllRecordsWithAthlete();
+            }
             StringBuilder json = new StringBuilder("[");
             for (int i=0; i<records.size(); i++) {
                 Object[] r = records.get(i);

@@ -97,6 +97,33 @@ public class PerformanceDAO {
         return list;
     }
 
+    /** Records for a specific athlete + sport — used by /records?athlete=email&sport=X */
+    public List<Object[]> getRecordsByAthleteSport(String athlete, String sport) {
+        List<Object[]> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT athlete,sport,distance,time_sec,speed,accuracy,stamina,score,level " +
+                 "FROM performance_records WHERE athlete=? AND sport=? ORDER BY created_at ASC")) {
+            ps.setString(1, athlete);
+            ps.setString(2, sport);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(new Object[]{
+                        rs.getString("athlete"),
+                        rs.getString("sport"),
+                        rs.getDouble("distance"), rs.getDouble("time_sec"),
+                        rs.getDouble("speed"),    rs.getDouble("accuracy"),
+                        rs.getDouble("stamina"),  rs.getDouble("score"),
+                        rs.getString("level")
+                    });
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("[PerformanceDAO] getRecordsByAthleteSport: " + e.getMessage());
+        }
+        return list;
+    }
+
     /** Session count for a specific athlete + sport — shown on dashboard */
     public int getTotalCount(String athlete, String sport) {
         try (Connection conn = DBConnection.getConnection();
