@@ -35,15 +35,15 @@ function onSportChange() {
     var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
 
     // Update form labels
-    setText("lblDistance", cfg.dist);
-    setText("lblTime",     cfg.time);
-    setText("lblAccuracy", cfg.acc);
-    setText("lblStamina",  cfg.sta);
+    setEl("lblDistance", cfg.dist);
+    setEl("lblTime",     cfg.time);
+    setEl("lblAccuracy", cfg.acc);
+    setEl("lblStamina",  cfg.sta);
 
     // Update table headers
-    setText("thDistance", cfg.dist.split(" ")[0]);
-    setText("thSpeed",    cfg.speed);
-    setText("thAccuracy", cfg.acc.split(" ")[0]);
+    setEl("thDistance", cfg.dist.split(" ")[0]);
+    setEl("thSpeed",    cfg.speed);
+    setEl("thAccuracy", cfg.acc.split(" ")[0]);
 
     // Update input placeholders
     setPlaceholder("distance", cfg.distPh);
@@ -345,11 +345,6 @@ function saveToLocal(sport, d, t, speed, accuracy, stamina, score, level) {
 }
 
 function setEl(id, val) {
-    var el = document.getElementById(id);
-    if (el) el.textContent = val;
-}
-
-function setText(id, val) {
     var el = document.getElementById(id);
     if (el) el.textContent = val;
 }
