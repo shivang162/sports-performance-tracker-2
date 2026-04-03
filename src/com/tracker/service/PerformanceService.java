@@ -7,7 +7,17 @@ import java.util.Map;
 /**
  * Core logic — Team Lead's main file.
  * calculateScore, calculateAverage, detectTrend,
- * calculatePeriodImprovement, getDashboardStats
+ * calculatePeriodImprovement, getDashboardStats, generateReport
+ *
+ * Scoring uses sport-specific weights [wSpeed, wM1, wM2].
+ * Speed is normalised to 0–100 against a sport-specific benchmark before weighting,
+ * so scores always fall in the 0–100 range.
+ *
+ * Sports with no meaningful speed (Basketball, Tennis) have wSpeed = 0.
+ * Sports with only one extra metric (Running, Swimming, Cycling, Weightlifting)
+ * have wM2 = 0 and the second metric value is ignored.
+ *
+ * The "accuracy" DB column stores metric-1 and "stamina" stores metric-2.
  */
 public class PerformanceService {
 
@@ -15,30 +25,49 @@ public class PerformanceService {
     private final PerformanceLevel lvl  = new PerformanceLevel();
 
     /**
-     * Sport-specific scoring weights: speed%, accuracy%, stamina%.
-     * Running:       speed dominant (60/20/20)
-     * Swimming:      balanced      (40/30/30)
-     * Basketball:    accuracy key  (20/50/30)
-     * Football:      balanced      (35/35/30)
-     * Tennis:        accuracy key  (25/45/30)
-     * Cycling:       speed+stamina (60/10/30)
-     * Weightlifting: form+stamina  (20/40/40)
-     * Default:       balanced      (40/30/30)
+     * Maximum speed benchmarks used to normalise speed to 0–100.
+     * Units match whatever the sport sends as distance/time:
+     *   Running/Swimming/Football → m/s
+     *   Cycling                   → km/s  (coach enters km + seconds)
+     *   Weightlifting             → kg/rep (weight ÷ reps)
+     *   Basketball/Tennis         → not used (wSpeed = 0)
      */
-    private static final Map<String, double[]> SPORT_WEIGHTS = Map.of(
-        "Running",       new double[]{0.60, 0.20, 0.20},
-        "Swimming",      new double[]{0.40, 0.30, 0.30},
-        "Basketball",    new double[]{0.20, 0.50, 0.30},
-        "Football",      new double[]{0.35, 0.35, 0.30},
-        "Tennis",        new double[]{0.25, 0.45, 0.30},
-        "Cycling",       new double[]{0.60, 0.10, 0.30},
-        "Weightlifting", new double[]{0.20, 0.40, 0.40}
+    private static final Map<String, Double> SPORT_MAX_SPEED = Map.of(
+        "Running",       10.5,   // 10.5 m/s ≈ elite sprint upper bound
+        "Swimming",       2.5,   // 2.5 m/s ≈ elite swimmer
+        "Basketball",     1.0,   // unused (wSpeed = 0)
+        "Football",       3.0,   // 3 m/s average distance coverage
+        "Tennis",         1.0,   // unused (wSpeed = 0)
+        "Cycling",        0.015, // 0.015 km/s ≈ 54 km/h
+        "Weightlifting", 25.0    // 25 kg/rep ≈ elite lifter single-rep load
     );
 
-    // 1. Weighted score using sport-specific weights
-    public double calculateScore(double speed, double accuracy, double stamina, String sport) {
-        double[] w = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
-        return (speed * w[0]) + (accuracy * w[1]) + (stamina * w[2]);
+    /**
+     * Sport-specific scoring weights: [wSpeed, wM1, wM2].
+     * All weights in each row sum to 1.0.
+     * M1/M2 are sport-specific metrics (0–100 range, coach-entered).
+     */
+    private static final Map<String, double[]> SPORT_WEIGHTS = Map.of(
+        "Running",       new double[]{0.60, 0.40, 0.00},
+        "Swimming",      new double[]{0.60, 0.40, 0.00},
+        "Basketball",    new double[]{0.00, 0.55, 0.45},
+        "Football",      new double[]{0.30, 0.40, 0.30},
+        "Tennis",        new double[]{0.00, 0.55, 0.45},
+        "Cycling",       new double[]{0.70, 0.30, 0.00},
+        "Weightlifting", new double[]{0.40, 0.60, 0.00}
+    );
+
+    /**
+     * Calculates a 0–100 performance score using normalised speed and
+     * sport-specific metric values (m1, m2).
+     * m1 is stored in the "accuracy" DB column; m2 in "stamina".
+     */
+    public double calculateScore(double speed, double m1, double m2, String sport) {
+        double[] w       = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
+        double   maxSpd  = SPORT_MAX_SPEED.getOrDefault(sport, 10.0);
+        double   normSpd = maxSpd > 0 ? Math.min(speed / maxSpd * 100.0, 100.0) : 0.0;
+        double   raw     = (normSpd * w[0]) + (m1 * w[1]) + (m2 * w[2]);
+        return Math.min(Math.max(raw, 0.0), 100.0);
     }
 
     // 2. Average
@@ -86,7 +115,67 @@ public class PerformanceService {
         return new DashboardStats(avg, trend, imp, lev, cnt, scores);
     }
 
-    // Inner DTO
+    /**
+     * Generates an accuracy report for the session that was just saved.
+     * Called after insert; getAllScores will already include the new record.
+     */
+    public AccuracyReport generateReport(double speed, double m1, double m2,
+                                         String sport, double score, String athlete) {
+        double[] w      = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
+        double   maxSpd = SPORT_MAX_SPEED.getOrDefault(sport, 10.0);
+        double   normSpd= maxSpd > 0 ? Math.min(speed / maxSpd * 100.0, 100.0) : 0.0;
+
+        double speedContrib = normSpd * w[0];
+        double m1Contrib    = m1     * w[1];
+        double m2Contrib    = m2     * w[2];
+
+        List<Double> allScores = dao.getAllScores(athlete, sport);
+        int    total   = allScores.size();               // includes newly saved row
+        boolean hasPrev= total >= 2;
+        double prevScore    = hasPrev ? allScores.get(total - 2) : 0.0;
+        double scoreChange  = hasPrev ? score - prevScore : 0.0;
+
+        // Distance to next performance level
+        String nextLevel;
+        double pointsToNext;
+        if      (score < 50) { nextLevel = "Average";   pointsToNext = 50 - score; }
+        else if (score < 70) { nextLevel = "Good";      pointsToNext = 70 - score; }
+        else if (score < 85) { nextLevel = "Excellent"; pointsToNext = 85 - score; }
+        else                 { nextLevel = "Peak";      pointsToNext = 0; }
+
+        return new AccuracyReport(normSpd, speedContrib, m1Contrib, m2Contrib,
+                                  hasPrev, prevScore, scoreChange,
+                                  pointsToNext, nextLevel, total);
+    }
+
+    // ── Inner DTOs ────────────────────────────────────────────────
+
+    public static class AccuracyReport {
+        public final double  speedNorm;
+        public final double  speedContrib, m1Contrib, m2Contrib;
+        public final boolean hasPrev;
+        public final double  prevScore, scoreChange;
+        public final double  pointsToNext;
+        public final String  nextLevel;
+        public final int     sessionCount;
+
+        public AccuracyReport(double speedNorm, double speedContrib,
+                              double m1Contrib, double m2Contrib,
+                              boolean hasPrev, double prevScore, double scoreChange,
+                              double pointsToNext, String nextLevel, int sessionCount) {
+            this.speedNorm    = speedNorm;
+            this.speedContrib = speedContrib;
+            this.m1Contrib    = m1Contrib;
+            this.m2Contrib    = m2Contrib;
+            this.hasPrev      = hasPrev;
+            this.prevScore    = prevScore;
+            this.scoreChange  = scoreChange;
+            this.pointsToNext = pointsToNext;
+            this.nextLevel    = nextLevel;
+            this.sessionCount = sessionCount;
+        }
+    }
+
     public static class DashboardStats {
         public final double avg; public final String trend;
         public final double improvement; public final String level;
