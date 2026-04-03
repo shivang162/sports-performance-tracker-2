@@ -28,12 +28,13 @@ public class RecordsController implements HttpHandler {
             StringBuilder json = new StringBuilder("[");
             for (int i=0; i<records.size(); i++) {
                 Object[] r = records.get(i);
-                // {athlete, distance, time_sec, speed, accuracy, stamina, score, level}
+                // {athlete, sport, distance, time_sec, speed, accuracy, stamina, score, level}
                 json.append(String.format(
-                    "{\"athlete\":\"%s\",\"distance\":%.2f,\"time\":%.2f," +
+                    "{\"athlete\":\"%s\",\"sport\":\"%s\",\"distance\":%.2f,\"time\":%.2f," +
                     "\"speed\":%.2f,\"accuracy\":%.2f,\"stamina\":%.2f," +
                     "\"score\":%.2f,\"level\":\"%s\"}",
-                    RecordFormatter.jsonEscape((String)r[0]),r[1],r[2],r[3],r[4],r[5],r[6],RecordFormatter.jsonEscape((String)r[7])));
+                    RecordFormatter.jsonEscape((String)r[0]),RecordFormatter.jsonEscape((String)r[1]),
+                    r[2],r[3],r[4],r[5],r[6],r[7],RecordFormatter.jsonEscape((String)r[8])));
                 if (i < records.size()-1) json.append(",");
             }
             json.append("]");

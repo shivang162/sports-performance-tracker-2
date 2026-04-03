@@ -4,6 +4,9 @@
 
 -- Create the database (run as superuser if it doesn't exist yet):
 --   psql -U postgres -c "CREATE DATABASE sports_tracker;"
+--
+-- If upgrading an existing database, add the sport column first:
+--   ALTER TABLE performance_records ADD COLUMN IF NOT EXISTS sport VARCHAR(50) NOT NULL DEFAULT 'Running';
 
 \connect sports_tracker
 
@@ -18,6 +21,7 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS performance_records (
     id         SERIAL       PRIMARY KEY,
     athlete    VARCHAR(100) NOT NULL,
+    sport      VARCHAR(50)  NOT NULL DEFAULT 'Running',
     distance   DOUBLE PRECISION NOT NULL,
     time_sec   DOUBLE PRECISION NOT NULL,
     speed      DOUBLE PRECISION NOT NULL,
@@ -38,13 +42,13 @@ VALUES ('coach@example.com',
 ON CONFLICT (email) DO NOTHING;
 
 -- Sample records for dashboard demo
-INSERT INTO performance_records (athlete, distance, time_sec, speed, accuracy, stamina, score, level) VALUES
-('coach@example.com', 400, 65, 6.15, 78, 70, 55.86, 'Average'),
-('coach@example.com', 400, 62, 6.45, 80, 72, 59.38, 'Average'),
-('coach@example.com', 400, 58, 6.90, 83, 75, 64.26, 'Average'),
-('coach@example.com', 400, 55, 7.27, 85, 78, 68.31, 'Average'),
-('coach@example.com', 400, 52, 7.69, 87, 80, 72.87, 'Good'),
-('coach@example.com', 400, 50, 8.00, 88, 82, 74.86, 'Good')
+INSERT INTO performance_records (athlete, sport, distance, time_sec, speed, accuracy, stamina, score, level) VALUES
+('coach@example.com', 'Running', 400, 65, 6.15, 78, 70, 55.86, 'Average'),
+('coach@example.com', 'Running', 400, 62, 6.45, 80, 72, 59.38, 'Average'),
+('coach@example.com', 'Running', 400, 58, 6.90, 83, 75, 64.26, 'Average'),
+('coach@example.com', 'Running', 400, 55, 7.27, 85, 78, 68.31, 'Average'),
+('coach@example.com', 'Running', 400, 52, 7.69, 87, 80, 72.87, 'Good'),
+('coach@example.com', 'Running', 400, 50, 8.00, 88, 82, 74.86, 'Good')
 ON CONFLICT DO NOTHING;
 
 SELECT 'Database setup complete.' AS status;

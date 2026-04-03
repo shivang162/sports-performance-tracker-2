@@ -50,7 +50,7 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px}
 <body>
 
 <nav>
-  <div class="nav-logo"><span>🏃</span> APEX SPORTS</div>
+  <div class="nav-logo"><span>🏅</span> APEX SPORTS</div>
   <div class="nav-links">
     <a href="dashboard.html">Dashboard</a>
     <a href="compare.html" class="active">Compare</a>
@@ -60,13 +60,25 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px}
 
 <main>
   <div class="page-title">ATHLETE COMPARISON</div>
-  <p class="page-sub">Enter two athlete email addresses to compare their performance from the database.</p>
+  <p class="page-sub">Enter two athlete email addresses and select a sport to compare their performance from the database.</p>
 
   <div class="err-box" id="errBox"></div>
 
-  <div class="input-row">
+  <div class="input-row" style="grid-template-columns:1fr 1fr 1fr auto">
     <div class="field"><label>Athlete A (email)</label><input type="text" id="athleteA" placeholder="coach@example.com"></div>
     <div class="field"><label>Athlete B (email)</label><input type="text" id="athleteB" placeholder="athlete2@example.com"></div>
+    <div class="field">
+      <label>Sport</label>
+      <select id="sportFilter" style="width:100%;background:#161616;border:1px solid #2a2a2a;border-radius:8px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:#F0EDE8;outline:none;-webkit-appearance:none;appearance:none">
+        <option value="Running">🏃 Running</option>
+        <option value="Swimming">🏊 Swimming</option>
+        <option value="Basketball">🏀 Basketball</option>
+        <option value="Football">⚽ Football</option>
+        <option value="Tennis">🎾 Tennis</option>
+        <option value="Cycling">🚴 Cycling</option>
+        <option value="Weightlifting">🏋️ Weightlifting</option>
+      </select>
+    </div>
     <button class="btn-compare" onclick="compare()" id="cmpBtn">COMPARE</button>
   </div>
 
@@ -117,20 +129,21 @@ function detectTrend(scores){
 function compare(){
   var nA=document.getElementById("athleteA").value.trim();
   var nB=document.getElementById("athleteB").value.trim();
+  var sport=document.getElementById("sportFilter").value;
   var btn=document.getElementById("cmpBtn");
   hideErr();
   if(!nA||!nB){showErr("Please enter both athlete emails.");return}
   if(nA===nB){showErr("Please enter two different athletes.");return}
   btn.textContent="COMPARING..."; btn.disabled=true;
 
-  // GET /records → filter by athlete → compute stats locally
+  // GET /records → filter by athlete + sport → compute stats locally
   fetch(BASE+"/records")
   .then(r=>r.json())
   .then(all=>{
-    var recA=all.filter(r=>r.athlete===nA);
-    var recB=all.filter(r=>r.athlete===nB);
+    var recA=all.filter(r=>r.athlete===nA && r.sport===sport);
+    var recB=all.filter(r=>r.athlete===nB && r.sport===sport);
 
-    if(!recA.length&&!recB.length){showErr("No records found for either athlete.");btn.textContent="COMPARE";btn.disabled=false;return}
+    if(!recA.length&&!recB.length){showErr("No "+sport+" records found for either athlete.");btn.textContent="COMPARE";btn.disabled=false;return}
 
     var avgA=recA.length?recA.reduce((s,r)=>s+r.score,0)/recA.length:0;
     var avgB=recB.length?recB.reduce((s,r)=>s+r.score,0)/recB.length:0;

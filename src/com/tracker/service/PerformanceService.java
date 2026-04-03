@@ -2,6 +2,7 @@ package com.tracker.service;
 
 import com.tracker.dao.PerformanceDAO;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Core logic — Team Lead's main file.
@@ -13,9 +14,31 @@ public class PerformanceService {
     private final PerformanceDAO  dao   = new PerformanceDAO();
     private final PerformanceLevel lvl  = new PerformanceLevel();
 
-    // 1. Weighted score: speed 40%, accuracy 30%, stamina 30%
-    public double calculateScore(double speed, double accuracy, double stamina) {
-        return (speed * 0.4) + (accuracy * 0.3) + (stamina * 0.3);
+    /**
+     * Sport-specific scoring weights: speed%, accuracy%, stamina%.
+     * Running:       speed dominant (60/20/20)
+     * Swimming:      balanced      (40/30/30)
+     * Basketball:    accuracy key  (20/50/30)
+     * Football:      balanced      (35/35/30)
+     * Tennis:        accuracy key  (25/45/30)
+     * Cycling:       speed+stamina (60/10/30)
+     * Weightlifting: form+stamina  (20/40/40)
+     * Default:       balanced      (40/30/30)
+     */
+    private static final Map<String, double[]> SPORT_WEIGHTS = Map.of(
+        "Running",       new double[]{0.60, 0.20, 0.20},
+        "Swimming",      new double[]{0.40, 0.30, 0.30},
+        "Basketball",    new double[]{0.20, 0.50, 0.30},
+        "Football",      new double[]{0.35, 0.35, 0.30},
+        "Tennis",        new double[]{0.25, 0.45, 0.30},
+        "Cycling",       new double[]{0.60, 0.10, 0.30},
+        "Weightlifting", new double[]{0.20, 0.40, 0.40}
+    );
+
+    // 1. Weighted score using sport-specific weights
+    public double calculateScore(double speed, double accuracy, double stamina, String sport) {
+        double[] w = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
+        return (speed * w[0]) + (accuracy * w[1]) + (stamina * w[2]);
     }
 
     // 2. Average
@@ -52,13 +75,13 @@ public class PerformanceService {
         return ((b-a)/Math.abs(a))*100.0;
     }
 
-    // 5. Full dashboard stats from DB for a specific athlete
-    public DashboardStats getDashboardStats(String athlete) {
-        List<Double> scores = dao.getAllScores(athlete);
+    // 5. Full dashboard stats from DB for a specific athlete + sport
+    public DashboardStats getDashboardStats(String athlete, String sport) {
+        List<Double> scores = dao.getAllScores(athlete, sport);
         double avg  = calculateAverage(scores);
         String trend= detectTrend(scores);
         double imp  = calculatePeriodImprovement(scores);
-        int    cnt  = dao.getTotalCount(athlete);
+        int    cnt  = dao.getTotalCount(athlete, sport);
         String lev  = lvl.getLevel(avg);
         return new DashboardStats(avg, trend, imp, lev, cnt, scores);
     }

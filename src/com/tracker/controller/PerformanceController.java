@@ -9,8 +9,8 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * POST /save
- * Reads distance/time/accuracy/stamina/athlete → validates → calculates
- * speed+score+level → saves to MySQL → returns JSON
+ * Reads sport/distance/time/accuracy/stamina/athlete → validates → calculates
+ * speed+score+level (sport-specific weights) → saves to PostgreSQL → returns JSON
  */
 public class PerformanceController implements HttpHandler {
 
@@ -31,12 +31,14 @@ public class PerformanceController implements HttpHandler {
             System.out.println("[PerformanceController] " + body);
 
             String athlete  = jsonStr(body,"athlete");
+            String sport    = jsonStr(body,"sport");
             double distance = jsonNum(body,"distance");
             double timeSec  = jsonNum(body,"time");
             double accuracy = jsonNum(body,"accuracy");
             double stamina  = jsonNum(body,"stamina");
 
             if (athlete==null||athlete.isBlank()) athlete="Unknown";
+            if (sport==null||sport.isBlank())     sport="Running";
             if (distance<=0) { send(ex,400,fmt.formatError("Distance must be > 0")); return; }
             if (timeSec<=0)  { send(ex,400,fmt.formatError("Time must be > 0")); return; }
 
@@ -46,13 +48,13 @@ public class PerformanceController implements HttpHandler {
             if (!vs.validateAccuracy(accuracy)){ send(ex,400,fmt.formatError("Accuracy must be 0–100")); return; }
             if (!vs.validateStamina(stamina)) { send(ex,400,fmt.formatError("Stamina must be 0–100")); return; }
 
-            double score = ps.calculateScore(speed, accuracy, stamina);
+            double score = ps.calculateScore(speed, accuracy, stamina, sport);
             String level = pl.getLevel(score);
 
-            dao.insertRecord(athlete, distance, timeSec, speed, accuracy, stamina, score, level);
+            dao.insertRecord(athlete, sport, distance, timeSec, speed, accuracy, stamina, score, level);
 
-            send(ex, 200, fmt.formatSaveResponse(athlete, speed, accuracy, stamina, score, level));
-            System.out.println("[PerformanceController] Score="+score+" Level="+level);
+            send(ex, 200, fmt.formatSaveResponse(athlete, sport, speed, accuracy, stamina, score, level));
+            System.out.println("[PerformanceController] sport="+sport+" Score="+score+" Level="+level);
 
         } catch (NumberFormatException e) {
             send(ex,400,fmt.formatError("Invalid number in request"));

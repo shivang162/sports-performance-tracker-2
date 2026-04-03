@@ -25,15 +25,17 @@ public class DashboardController implements HttpHandler {
         if (!ex.getRequestMethod().equalsIgnoreCase("GET"))    { send(ex,405,fmt.formatError("Method not allowed")); return; }
         try {
             String athlete = queryParam(ex.getRequestURI().getRawQuery(), "athlete");
+            String sport   = queryParam(ex.getRequestURI().getRawQuery(), "sport");
             if (athlete == null || athlete.isBlank()) {
                 send(ex, 400, fmt.formatError("Missing athlete parameter")); return;
             }
-            PerformanceService.DashboardStats stats = ps.getDashboardStats(athlete);
-            String suggestion = ss.getSuggestion(stats.scores);
+            if (sport == null || sport.isBlank()) sport = "Running";
+            PerformanceService.DashboardStats stats = ps.getDashboardStats(athlete, sport);
+            String suggestion = ss.getSuggestion(stats.scores, sport);
             String response   = fmt.formatDashboard(
                 stats.avg, stats.trend, stats.improvement,
                 stats.level, stats.sessions, stats.scores, suggestion);
-            System.out.println("[DashboardController] athlete="+athlete+" avg="+String.format("%.2f",stats.avg)+" trend="+stats.trend);
+            System.out.println("[DashboardController] athlete="+athlete+" sport="+sport+" avg="+String.format("%.2f",stats.avg)+" trend="+stats.trend);
             send(ex,200,response);
         } catch (Exception e) {
             System.err.println("[DashboardController] "+e.getMessage());

@@ -12,6 +12,48 @@
 const BASE_URL = "http://localhost:8080";
 let chartInstance;
 
+// ── Sport configuration: labels, placeholders, offline weights ──
+
+var SPORT_CONFIG = {
+    "Running":       { dist: "Distance (m)",    time: "Time (sec)",      acc: "Form (0–100)",          sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "400", timePh: "60",  wSpeed: 0.60, wAcc: 0.20, wSta: 0.20 },
+    "Swimming":      { dist: "Distance (m)",    time: "Time (sec)",      acc: "Technique (0–100)",      sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "100", timePh: "90",  wSpeed: 0.40, wAcc: 0.30, wSta: 0.30 },
+    "Basketball":    { dist: "Shots Attempted", time: "Duration (sec)",  acc: "Shot Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Pace",         distPh: "20",  timePh: "120", wSpeed: 0.20, wAcc: 0.50, wSta: 0.30 },
+    "Football":      { dist: "Distance (m)",    time: "Time (sec)",      acc: "Pass Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "500", timePh: "90",  wSpeed: 0.35, wAcc: 0.35, wSta: 0.30 },
+    "Tennis":        { dist: "Rallies",         time: "Duration (sec)",  acc: "Shot Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Rally Pace",   distPh: "15",  timePh: "60",  wSpeed: 0.25, wAcc: 0.45, wSta: 0.30 },
+    "Cycling":       { dist: "Distance (km)",   time: "Time (sec)",      acc: "Form (0–100)",           sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "20",  timePh: "3600",wSpeed: 0.60, wAcc: 0.10, wSta: 0.30 },
+    "Weightlifting": { dist: "Weight (kg)",     time: "Duration (sec)",  acc: "Form Score (0–100)",     sta: "Stamina (0–100)", speed: "Lift Rate",    distPh: "80",  timePh: "60",  wSpeed: 0.20, wAcc: 0.40, wSta: 0.40 }
+};
+
+function getSport() {
+    var sel = document.getElementById("sportSelect");
+    return sel ? sel.value : "Running";
+}
+
+/** Called when sport dropdown changes — update labels and refresh dashboard */
+function onSportChange() {
+    var sport = getSport();
+    var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+
+    // Update form labels
+    setText("lblDistance", cfg.dist);
+    setText("lblTime",     cfg.time);
+    setText("lblAccuracy", cfg.acc);
+    setText("lblStamina",  cfg.sta);
+
+    // Update table headers
+    setText("thDistance", cfg.dist.split(" ")[0]);
+    setText("thSpeed",    cfg.speed);
+    setText("thAccuracy", cfg.acc.split(" ")[0]);
+
+    // Update input placeholders
+    setPlaceholder("distance", cfg.distPh);
+    setPlaceholder("time",     cfg.timePh);
+
+    // Reload dashboard stats for this sport
+    fetchDashboard();
+    updateUI();
+}
+
 // ── Page detection ─────────────────────────────────────────────
 
 window.onload = function () {
@@ -30,7 +72,7 @@ function initLoginPage() {
 }
 
 /**
- * POST /login → AuthController → AuthService → UserDAO → MySQL
+ * POST /login → AuthController → AuthService → UserDAO → PostgreSQL
  * On success: stores email in sessionStorage, redirects to dashboard.html
  */
 function login() {
@@ -80,8 +122,9 @@ function initDashboard() {
     var badge = document.getElementById("userBadge");
     if (badge) badge.textContent = email;
 
-    fetchDashboard();   // pull DB stats + suggestion
-    updateUI();         // render localStorage records in table + chart
+    // Apply initial sport labels
+    onSportChange();
+    // onSportChange() calls fetchDashboard() and updateUI(), so no extra calls needed
 }
 
 // ── GET /dashboard → DashboardController ───────────────────────
@@ -91,7 +134,9 @@ function initDashboard() {
  * Updates: totalSessions, avgScore, stat-trend stat cards + suggestion box
  */
 function fetchDashboard() {
-    fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email))
+    var email = sessionStorage.getItem("userEmail") || "coach@example.com";
+    var sport = getSport();
+    fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
     .then(function (res) { return res.json(); })
     .then(function (data) {
         var s = data.summary;
@@ -128,16 +173,17 @@ function fetchDashboard() {
 // ── POST /save → PerformanceController ─────────────────────────
 
 /**
- * Sends: athlete, distance, time, accuracy, stamina
- * Server: validates → speed = distance/time → calculateScore → level → MySQL
- * Returns: {success, athlete, speed, accuracy, stamina, score, level}
- * On offline: calculates score locally, saves to localStorage
+ * Sends: athlete, sport, distance, time, accuracy, stamina
+ * Server: validates → speed = distance/time → calculateScore (sport weights) → level → PostgreSQL
+ * Returns: {success, athlete, sport, speed, accuracy, stamina, score, level}
+ * On offline: calculates score locally using sport weights, saves to localStorage
  */
 function saveData() {
     var d        = parseFloat(document.getElementById("distance").value);
     var t        = parseFloat(document.getElementById("time").value);
     var accuracy = parseFloat(document.getElementById("accuracy").value);
     var stamina  = parseFloat(document.getElementById("stamina").value);
+    var sport    = getSport();
 
     if (!d || !t || isNaN(accuracy) || isNaN(stamina)) {
         showToast("Please fill in all fields.", "red"); return;
@@ -154,6 +200,7 @@ function saveData() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
             athlete:  sessionStorage.getItem("userEmail") || "Demo Athlete",
+            sport:    sport,
             distance: d,
             time:     t,
             accuracy: accuracy,
@@ -163,7 +210,7 @@ function saveData() {
     .then(function (res) { return res.json(); })
     .then(function (data) {
         if (!data.success) { showToast(data.error || "Save failed.", "red"); return; }
-        saveToLocal(d, t, data.speed, accuracy, stamina, data.score, data.level);
+        saveToLocal(sport, d, t, data.speed, accuracy, stamina, data.score, data.level);
         showLevelBadge(data.level, data.score);
         showToast("Saved! Score: " + parseFloat(data.score).toFixed(1) + " — " + data.level);
         clearForm();
@@ -171,10 +218,11 @@ function saveData() {
         fetchDashboard();
     })
     .catch(function () {
-        // Offline fallback — mirrors Java calculateScore formula
-        var score = (speed * 0.4) + (accuracy * 0.3) + (stamina * 0.3);
+        // Offline fallback — mirrors Java calculateScore with sport-specific weights
+        var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+        var score = (speed * cfg.wSpeed) + (accuracy * cfg.wAcc) + (stamina * cfg.wSta);
         var level = localLevel(score);
-        saveToLocal(d, t, speed, accuracy, stamina, score, level);
+        saveToLocal(sport, d, t, speed, accuracy, stamina, score, level);
         showLevelBadge(level, score);
         showToast("Saved locally (server offline). Score: " + score.toFixed(1), "red");
         clearForm();
@@ -185,14 +233,16 @@ function saveData() {
 // ── Table + Chart ───────────────────────────────────────────────
 
 function updateUI() {
-    var records = getRecords();
+    var sport   = getSport();
+    var records = getRecords().filter(function (r) { return r.sport === sport; });
+    var cfg     = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
     var tbody   = document.getElementById("tableBody");
     if (!tbody) return;
 
     if (!records.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No sessions yet. Add your first one!</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No ' + sport + ' sessions yet. Add your first one!</td></tr>';
         setEl("avgSpeed", "0.00"); setEl("bestSpeed", "0.00");
-        drawChart([]); return;
+        drawChart([], cfg); return;
     }
 
     var totalSpeed = 0, best = 0;
@@ -205,7 +255,8 @@ function updateUI() {
         tbody.innerHTML +=
             "<tr>" +
             "<td>" + (i + 1) + "</td>" +
-            "<td>" + r.d + " m</td>" +
+            "<td>" + r.sport + "</td>" +
+            "<td>" + r.d + "</td>" +
             "<td>" + r.t + " s</td>" +
             "<td>" + r.speed.toFixed(2) + "</td>" +
             "<td>" + r.accuracy + "</td>" +
@@ -218,12 +269,13 @@ function updateUI() {
 
     setEl("avgSpeed",  (totalSpeed / records.length).toFixed(2));
     setEl("bestSpeed", best.toFixed(2));
-    drawChart(records);
+    drawChart(records, cfg);
 }
 
-function drawChart(records) {
+function drawChart(records, cfg) {
     var canvas = document.getElementById("chart");
     if (!canvas) return;
+    var sportCfg = cfg || SPORT_CONFIG[getSport()] || SPORT_CONFIG["Running"];
     var labels = records.map(function (_, i) { return "#" + (i + 1); });
     var speeds = records.map(function (r) { return r.speed.toFixed(2); });
     if (chartInstance) chartInstance.destroy();
@@ -232,7 +284,7 @@ function drawChart(records) {
         data: {
             labels: labels,
             datasets: [{
-                label:                "Speed (m/s)",
+                label:                sportCfg.speed,
                 data:                 speeds,
                 fill:                 true,
                 borderColor:          "#E83A2F",
@@ -255,9 +307,15 @@ function drawChart(records) {
 // ── Delete / Reset / Logout ────────────────────────────────────
 
 function deleteRow(i) {
-    var records = getRecords();
-    records.splice(i, 1);
-    localStorage.setItem("records", JSON.stringify(records));
+    var sport   = getSport();
+    var all     = getRecords();
+    // Get the indices of records matching this sport, then remove the i-th match
+    var sportIdxs = [];
+    all.forEach(function (r, idx) { if (r.sport === sport) sportIdxs.push(idx); });
+    if (i < sportIdxs.length) {
+        all.splice(sportIdxs[i], 1);
+        localStorage.setItem("records", JSON.stringify(all));
+    }
     updateUI();
     showToast("Record removed.");
 }
@@ -280,15 +338,25 @@ function getRecords() {
     return JSON.parse(localStorage.getItem("records")) || [];
 }
 
-function saveToLocal(d, t, speed, accuracy, stamina, score, level) {
+function saveToLocal(sport, d, t, speed, accuracy, stamina, score, level) {
     var records = getRecords();
-    records.push({ d: d, t: t, speed: speed, accuracy: accuracy, stamina: stamina, score: score, level: level });
+    records.push({ sport: sport, d: d, t: t, speed: speed, accuracy: accuracy, stamina: stamina, score: score, level: level });
     localStorage.setItem("records", JSON.stringify(records));
 }
 
 function setEl(id, val) {
     var el = document.getElementById(id);
     if (el) el.textContent = val;
+}
+
+function setText(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = val;
+}
+
+function setPlaceholder(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.placeholder = "e.g. " + val;
 }
 
 function clearForm() {
