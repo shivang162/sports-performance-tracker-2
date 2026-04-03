@@ -82,6 +82,20 @@ public class DBConnection {
                 ")"
             );
 
+            st.execute(
+                "CREATE TABLE IF NOT EXISTS tasks (" +
+                "  id           INTEGER  PRIMARY KEY AUTOINCREMENT," +
+                "  coach        TEXT     NOT NULL," +
+                "  athlete      TEXT     NOT NULL," +
+                "  title        TEXT     NOT NULL," +
+                "  description  TEXT     NOT NULL DEFAULT ''," +
+                "  due_date     TEXT     NOT NULL DEFAULT ''," +
+                "  status       TEXT     NOT NULL DEFAULT 'pending'," +
+                "  snooze_count INTEGER  NOT NULL DEFAULT 0," +
+                "  created_at   DATETIME DEFAULT CURRENT_TIMESTAMP" +
+                ")"
+            );
+
             // Seed demo coach account (PBKDF2-HMAC-SHA256 hash of "safePassword123")
             st.execute(
                 "INSERT OR IGNORE INTO users (email, password, role) VALUES (" +
