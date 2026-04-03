@@ -16,11 +16,10 @@ import java.net.InetSocketAddress;
  *   GET  /records   → RecordsController    (all records for compare page)
  *
  * How to run:
- *   1. Start MySQL
- *   2. mysql -u root -p < database/schema.sql
- *   3. Add mysql-connector-java JAR to lib/ folder
- *   4. Run Main.java
- *   5. Open src/com/tracker/frontend/login.html in browser
+ *   1. make run          (compiles + starts the server)
+ *   2. Open src/com/tracker/frontend/login.html in browser
+ *      or navigate to http://localhost:8080
+ *   The SQLite database file (sports_tracker.db) is created automatically on first run.
  */
 public class Main {
 

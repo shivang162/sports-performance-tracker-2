@@ -1,3 +1,6 @@
 # Compiled Java classes
 *.class
 out/
+
+# SQLite database file (created automatically at runtime)
+sports_tracker.db

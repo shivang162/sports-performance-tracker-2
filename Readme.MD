@@ -4,16 +4,18 @@ A full-stack Java web application for tracking and analyzing athlete performance
 
 ## Tech Stack
 - **Backend**: Java (plain HTTP server — no frameworks)
-- **Database**: MySQL via JDBC
+- **Database**: SQLite via JDBC (embedded — no external database server required)
 - **Frontend**: HTML + CSS + JavaScript + Chart.js
 
 ## Project Structure
 ```
 sports-performance-tracker/
 ├── database/
-│   └── schema.sql              ← Run this first in MySQL
+│   └── Schema.sql              ← SQLite schema (auto-applied on first run)
 ├── lib/
-│   └── mysql-connector-j.jar   ← Download and place here
+│   ├── sqlite-jdbc-3.45.3.0.jar  ← SQLite JDBC driver
+│   ├── slf4j-api-2.0.13.jar      ← Required by sqlite-jdbc
+│   └── slf4j-nop-2.0.13.jar      ← SLF4J no-op logger
 ├── src/com/tracker/
 │   ├── Main.java               ← Entry point, starts HTTP server
 │   ├── controller/
@@ -31,7 +33,7 @@ sports-performance-tracker/
 │   │   ├── PerformanceLevel.java
 │   │   └── RecordFormatter.java      JSON builder
 │   ├── dao/
-│   │   ├── DBConnection.java         MySQL singleton
+│   │   ├── DBConnection.java         SQLite connection factory (auto-init schema)
 │   │   ├── UserDAO.java
 │   │   └── PerformanceDAO.java
 │   └── frontend/
@@ -56,43 +58,34 @@ sports-performance-tracker/
 
 ## How to Run
 
-### Step 1 — Setup MySQL
-```bash
-mysql -u root -p < database/schema.sql
-```
+No external database setup is required. The SQLite database file (`sports_tracker.db`)
+is created automatically when the server starts for the first time.
 
-### Step 2 — Add MySQL JDBC Driver
-Download `mysql-connector-j-8.x.x.jar` from https://dev.mysql.com/downloads/connector/j/  
-Place it in the `lib/` folder.
-
-### Step 3 — Update your password
-Open `src/com/tracker/dao/DBConnection.java` and set `DB_PASS` to your MySQL password.
-
-### Step 4 — Test DB connection
+### Step 1 — Test DB connection (optional)
 ```bash
 make test-db
 ```
-You should see: `Connected to Database ✅`
+You should see: `Connected to SQLite ✅`
 
-If `make` is not available, run manually:
-```bash
-javac -cp lib/mysql-connector-j-9.6.0.jar TestDB.java
-java  -cp .:lib/mysql-connector-j-9.6.0.jar TestDB
-```
-
-### Step 5 — Run the server
+### Step 2 — Run the server
 ```bash
 make run
 ```
-Or in VS Code, add the JAR to your Java build path and run `Main.java`.
+Or in VS Code, add the JARs in `lib/` to your Java build path and run `Main.java`.
 
-### Step 6 — Open in browser
+### Step 3 — Open in browser
 Open `src/com/tracker/frontend/login.html`
 
 **Demo login**: `coach@example.com` / `safePassword123`
 
+### Override the database file path (optional)
+```bash
+export DB_URL=jdbc:sqlite:/path/to/your/sports_tracker.db
+make run
+```
+
 ## Features
-- Login & Registration with MySQL
+- Login & Registration with SQLite
 - Save performance sessions (distance, time, accuracy, stamina)
 - Auto-calculated speed and weighted score
 - Dashboard with trend analysis, avg score, and DB-powered stats

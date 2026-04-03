@@ -21,8 +21,10 @@ public class TestLogic {
         List<Double> declining = Arrays.asList(90.0, 80.0, 70.0, 60.0);
 
         System.out.println("=== PerformanceService ===");
-        System.out.println("1. calculateScore(90,50,75)    = " + ps.calculateScore(90,50,75));
-        // Expected: 73.5
+        System.out.println("1. calculateScore(Running,90,50,75)    = " + ps.calculateScore(90,50,75,"Running"));
+        // Running weights 60/20/20 → expected: (90*0.6)+(50*0.2)+(75*0.2) = 54+10+15 = 79.0
+        System.out.println("   calculateScore(Basketball,90,50,75) = " + ps.calculateScore(90,50,75,"Basketball"));
+        // Basketball weights 20/50/30 → expected: (90*0.2)+(50*0.5)+(75*0.3) = 18+25+22.5 = 65.5
 
         System.out.println("2. calculateAverage            = " + ps.calculateAverage(improving));
         // Expected: 75.0
@@ -49,12 +51,12 @@ public class TestLogic {
         System.out.println("9. compareAthletesJson         = " + pa.compareAthletesJson(improving,"Rahul",declining,"Amit"));
 
         System.out.println("\n=== SuggestionService ===");
-        System.out.println("10. improving suggestion       = " + ss.getSuggestion(improving));
-        System.out.println("11. declining suggestion       = " + ss.getSuggestion(declining));
-        System.out.println("12. empty suggestion           = " + ss.getSuggestion(new ArrayList<>()));
+        System.out.println("10. improving suggestion (Running)    = " + ss.getSuggestion(improving,"Running"));
+        System.out.println("11. declining suggestion (Swimming)   = " + ss.getSuggestion(declining,"Swimming"));
+        System.out.println("12. empty suggestion (Basketball)     = " + ss.getSuggestion(new ArrayList<>(),"Basketball"));
 
         System.out.println("\n=== RecordFormatter ===");
-        System.out.println("13. formatSaveResponse         = " + fmt.formatSaveResponse("Rahul",8.5,80,75,73.5,"Good"));
+        System.out.println("13. formatSaveResponse         = " + fmt.formatSaveResponse("Rahul","Running",8.5,80,75,73.5,"Good"));
         System.out.println("14. formatError                = " + fmt.formatError("Test error"));
         System.out.println("15. formatSuccess              = " + fmt.formatSuccess("Saved OK"));
 

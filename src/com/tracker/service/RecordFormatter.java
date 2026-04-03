@@ -16,14 +16,14 @@ public class RecordFormatter {
                 .replace("\t", "\\t");
     }
 
-    public String formatSaveResponse(String athlete, double speed,
+    public String formatSaveResponse(String athlete, String sport, double speed,
                                      double accuracy, double stamina,
                                      double score, String level) {
         return String.format(
-            "{\"success\":true,\"athlete\":\"%s\"," +
+            "{\"success\":true,\"athlete\":\"%s\",\"sport\":\"%s\"," +
             "\"speed\":%.2f,\"accuracy\":%.2f,\"stamina\":%.2f," +
             "\"score\":%.2f,\"level\":\"%s\"}",
-            jsonEscape(athlete), speed, accuracy, stamina, score, jsonEscape(level));
+            jsonEscape(athlete), jsonEscape(sport), speed, accuracy, stamina, score, jsonEscape(level));
     }
 
     public String formatDashboard(double avg, String trend, double imp,

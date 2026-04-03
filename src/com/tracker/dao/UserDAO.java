@@ -51,7 +51,7 @@ public class UserDAO {
         return HexFormat.of().formatHex(salt);
     }
 
-    /** Validate login — queries MySQL, verifies PBKDF2 hashed password. */
+    /** Validate login — queries SQLite, verifies PBKDF2 hashed password. */
     public boolean validateUser(String email, String password) {
         if (email == null || password == null) return false;
         try (Connection conn = DBConnection.getConnection();
@@ -102,5 +102,21 @@ public class UserDAO {
                 return rs.next();
             }
         } catch (SQLException e) { return false; }
+    }
+
+    /** Returns the role of the given user, or "athlete" if not found. */
+    public String getUserRole(String email) {
+        if (email == null) return "athlete";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT role FROM users WHERE email=? LIMIT 1")) {
+            ps.setString(1, email.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("role");
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDAO] getUserRole: " + e.getMessage());
+        }
+        return "athlete";
     }
 }

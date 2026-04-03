@@ -12,6 +12,48 @@
 const BASE_URL = "http://localhost:8080";
 let chartInstance;
 
+// ── Sport configuration: labels, placeholders, offline weights ──
+
+var SPORT_CONFIG = {
+    "Running":       { dist: "Distance (m)",    time: "Time (sec)",      acc: "Form (0–100)",          sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "400", timePh: "60",  wSpeed: 0.60, wAcc: 0.20, wSta: 0.20 },
+    "Swimming":      { dist: "Distance (m)",    time: "Time (sec)",      acc: "Technique (0–100)",      sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "100", timePh: "90",  wSpeed: 0.40, wAcc: 0.30, wSta: 0.30 },
+    "Basketball":    { dist: "Shots Attempted", time: "Duration (sec)",  acc: "Shot Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Pace",         distPh: "20",  timePh: "120", wSpeed: 0.20, wAcc: 0.50, wSta: 0.30 },
+    "Football":      { dist: "Distance (m)",    time: "Time (sec)",      acc: "Pass Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "500", timePh: "90",  wSpeed: 0.35, wAcc: 0.35, wSta: 0.30 },
+    "Tennis":        { dist: "Rallies",         time: "Duration (sec)",  acc: "Shot Accuracy (0–100)",  sta: "Stamina (0–100)", speed: "Rally Pace",   distPh: "15",  timePh: "60",  wSpeed: 0.25, wAcc: 0.45, wSta: 0.30 },
+    "Cycling":       { dist: "Distance (km)",   time: "Time (sec)",      acc: "Form (0–100)",           sta: "Stamina (0–100)", speed: "Speed (m/s)",  distPh: "20",  timePh: "3600",wSpeed: 0.60, wAcc: 0.10, wSta: 0.30 },
+    "Weightlifting": { dist: "Weight (kg)",     time: "Duration (sec)",  acc: "Form Score (0–100)",     sta: "Stamina (0–100)", speed: "Lift Rate",    distPh: "80",  timePh: "60",  wSpeed: 0.20, wAcc: 0.40, wSta: 0.40 }
+};
+
+function getSport() {
+    var sel = document.getElementById("sportSelect");
+    return sel ? sel.value : "Running";
+}
+
+/** Called when sport dropdown changes — update labels and refresh dashboard */
+function onSportChange() {
+    var sport = getSport();
+    var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+
+    // Update form labels
+    setEl("lblDistance", cfg.dist);
+    setEl("lblTime",     cfg.time);
+    setEl("lblAccuracy", cfg.acc);
+    setEl("lblStamina",  cfg.sta);
+
+    // Update table headers
+    setEl("thDistance", cfg.dist.split(" ")[0]);
+    setEl("thSpeed",    cfg.speed);
+    setEl("thAccuracy", cfg.acc.split(" ")[0]);
+
+    // Update input placeholders
+    setPlaceholder("distance", cfg.distPh);
+    setPlaceholder("time",     cfg.timePh);
+
+    // Reload dashboard stats for this sport
+    fetchDashboard();
+    updateUI();
+}
+
 // ── Page detection ─────────────────────────────────────────────
 
 window.onload = function () {
@@ -30,7 +72,7 @@ function initLoginPage() {
 }
 
 /**
- * POST /login → AuthController → AuthService → UserDAO → MySQL
+ * POST /login → AuthController → AuthService → UserDAO → SQLite
  * On success: stores email in sessionStorage, redirects to dashboard.html
  */
 function login() {
@@ -55,7 +97,9 @@ function login() {
         if (!data.success) throw new Error(data.error || "Invalid credentials");
         showSuc(data.message || "Login Successful");
         sessionStorage.setItem("userEmail", email);
-        setTimeout(function () { window.location.href = "dashboard.html"; }, 800);
+        sessionStorage.setItem("userRole",  data.role || "athlete");
+        var dest = (data.role === "coach") ? "dashboard.html" : "athlete.html";
+        setTimeout(function () { window.location.href = dest; }, 800);
     })
     .catch(function (err) {
         showErr(err.message || "Server not reachable. Is Java running on port 8080?");
@@ -75,13 +119,22 @@ function guestLogin() {
 // ═══════════════════════════════════════════════════════════════
 
 function initDashboard() {
+    // Redirect athletes away from the coach dashboard
+    var role = sessionStorage.getItem("userRole") || "guest";
+    if (role !== "coach" && role !== "guest") {
+        window.location.href = "athlete.html"; return;
+    }
+
     // Show logged-in user in navbar
     var email = sessionStorage.getItem("userEmail") || "coach@example.com";
     var badge = document.getElementById("userBadge");
     if (badge) badge.textContent = email;
+    var roleBadge = document.getElementById("roleBadge");
+    if (roleBadge) roleBadge.textContent = role === "coach" ? "Coach" : "Guest";
 
-    fetchDashboard();   // pull DB stats + suggestion
-    updateUI();         // render localStorage records in table + chart
+    // Apply initial sport labels
+    onSportChange();
+    // onSportChange() calls fetchDashboard() and updateUI(), so no extra calls needed
 }
 
 // ── GET /dashboard → DashboardController ───────────────────────
@@ -91,7 +144,9 @@ function initDashboard() {
  * Updates: totalSessions, avgScore, stat-trend stat cards + suggestion box
  */
 function fetchDashboard() {
-    fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email))
+    var email = sessionStorage.getItem("userEmail") || "coach@example.com";
+    var sport = getSport();
+    fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
     .then(function (res) { return res.json(); })
     .then(function (data) {
         var s = data.summary;
@@ -128,16 +183,17 @@ function fetchDashboard() {
 // ── POST /save → PerformanceController ─────────────────────────
 
 /**
- * Sends: athlete, distance, time, accuracy, stamina
- * Server: validates → speed = distance/time → calculateScore → level → MySQL
- * Returns: {success, athlete, speed, accuracy, stamina, score, level}
- * On offline: calculates score locally, saves to localStorage
+ * Sends: athlete, sport, distance, time, accuracy, stamina
+ * Server: validates → speed = distance/time → calculateScore (sport weights) → level → SQLite
+ * Returns: {success, athlete, sport, speed, accuracy, stamina, score, level}
+ * On offline: calculates score locally using sport weights, saves to localStorage
  */
 function saveData() {
     var d        = parseFloat(document.getElementById("distance").value);
     var t        = parseFloat(document.getElementById("time").value);
     var accuracy = parseFloat(document.getElementById("accuracy").value);
     var stamina  = parseFloat(document.getElementById("stamina").value);
+    var sport    = getSport();
 
     if (!d || !t || isNaN(accuracy) || isNaN(stamina)) {
         showToast("Please fill in all fields.", "red"); return;
@@ -154,6 +210,7 @@ function saveData() {
         headers: { "Content-Type": "application/json" },
         body:    JSON.stringify({
             athlete:  sessionStorage.getItem("userEmail") || "Demo Athlete",
+            sport:    sport,
             distance: d,
             time:     t,
             accuracy: accuracy,
@@ -163,7 +220,7 @@ function saveData() {
     .then(function (res) { return res.json(); })
     .then(function (data) {
         if (!data.success) { showToast(data.error || "Save failed.", "red"); return; }
-        saveToLocal(d, t, data.speed, accuracy, stamina, data.score, data.level);
+        saveToLocal(sport, d, t, data.speed, accuracy, stamina, data.score, data.level);
         showLevelBadge(data.level, data.score);
         showToast("Saved! Score: " + parseFloat(data.score).toFixed(1) + " — " + data.level);
         clearForm();
@@ -171,10 +228,11 @@ function saveData() {
         fetchDashboard();
     })
     .catch(function () {
-        // Offline fallback — mirrors Java calculateScore formula
-        var score = (speed * 0.4) + (accuracy * 0.3) + (stamina * 0.3);
+        // Offline fallback — mirrors Java calculateScore with sport-specific weights
+        var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+        var score = (speed * cfg.wSpeed) + (accuracy * cfg.wAcc) + (stamina * cfg.wSta);
         var level = localLevel(score);
-        saveToLocal(d, t, speed, accuracy, stamina, score, level);
+        saveToLocal(sport, d, t, speed, accuracy, stamina, score, level);
         showLevelBadge(level, score);
         showToast("Saved locally (server offline). Score: " + score.toFixed(1), "red");
         clearForm();
@@ -185,45 +243,57 @@ function saveData() {
 // ── Table + Chart ───────────────────────────────────────────────
 
 function updateUI() {
-    var records = getRecords();
+    var sport   = getSport();
+    var records = getRecords().filter(function (r) { return r.sport === sport; });
+    var cfg     = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
     var tbody   = document.getElementById("tableBody");
     if (!tbody) return;
 
     if (!records.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No sessions yet. Add your first one!</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No ' + escapeHtml(sport) + ' sessions yet. Add your first one!</td></tr>';
         setEl("avgSpeed", "0.00"); setEl("bestSpeed", "0.00");
-        drawChart([]); return;
+        drawChart([], cfg); return;
     }
 
     var totalSpeed = 0, best = 0;
     tbody.innerHTML = "";
 
     records.forEach(function (r, i) {
-        totalSpeed += r.speed;
-        if (r.speed > best) best = r.speed;
-        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + r.level;
+        var sport  = escapeHtml(r.sport);
+        var d      = parseFloat(r.d);
+        var t      = parseFloat(r.t);
+        var speed  = parseFloat(r.speed);
+        var acc    = parseFloat(r.accuracy);
+        var sta    = parseFloat(r.stamina);
+        var score  = parseFloat(r.score);
+        var level  = escapeHtml(r.level);
+        totalSpeed += speed;
+        if (speed > best) best = speed;
+        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
         tbody.innerHTML +=
             "<tr>" +
             "<td>" + (i + 1) + "</td>" +
-            "<td>" + r.d + " m</td>" +
-            "<td>" + r.t + " s</td>" +
-            "<td>" + r.speed.toFixed(2) + "</td>" +
-            "<td>" + r.accuracy + "</td>" +
-            "<td>" + r.stamina + "</td>" +
-            "<td>" + r.score.toFixed(1) + "</td>" +
-            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + r.level + "</span></td>" +
+            "<td>" + sport + "</td>" +
+            "<td>" + d + "</td>" +
+            "<td>" + t + " s</td>" +
+            "<td>" + speed.toFixed(2) + "</td>" +
+            "<td>" + acc + "</td>" +
+            "<td>" + sta + "</td>" +
+            "<td>" + score.toFixed(1) + "</td>" +
+            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td>" +
             "<td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td>" +
             "</tr>";
     });
 
     setEl("avgSpeed",  (totalSpeed / records.length).toFixed(2));
     setEl("bestSpeed", best.toFixed(2));
-    drawChart(records);
+    drawChart(records, cfg);
 }
 
-function drawChart(records) {
+function drawChart(records, cfg) {
     var canvas = document.getElementById("chart");
     if (!canvas) return;
+    var sportCfg = cfg || SPORT_CONFIG[getSport()] || SPORT_CONFIG["Running"];
     var labels = records.map(function (_, i) { return "#" + (i + 1); });
     var speeds = records.map(function (r) { return r.speed.toFixed(2); });
     if (chartInstance) chartInstance.destroy();
@@ -232,7 +302,7 @@ function drawChart(records) {
         data: {
             labels: labels,
             datasets: [{
-                label:                "Speed (m/s)",
+                label:                sportCfg.speed,
                 data:                 speeds,
                 fill:                 true,
                 borderColor:          "#E83A2F",
@@ -255,9 +325,15 @@ function drawChart(records) {
 // ── Delete / Reset / Logout ────────────────────────────────────
 
 function deleteRow(i) {
-    var records = getRecords();
-    records.splice(i, 1);
-    localStorage.setItem("records", JSON.stringify(records));
+    var sport   = getSport();
+    var all     = getRecords();
+    // Get the indices of records matching this sport, then remove the i-th match
+    var sportIdxs = [];
+    all.forEach(function (r, idx) { if (r.sport === sport) sportIdxs.push(idx); });
+    if (i < sportIdxs.length) {
+        all.splice(sportIdxs[i], 1);
+        localStorage.setItem("records", JSON.stringify(all));
+    }
     updateUI();
     showToast("Record removed.");
 }
@@ -280,15 +356,30 @@ function getRecords() {
     return JSON.parse(localStorage.getItem("records")) || [];
 }
 
-function saveToLocal(d, t, speed, accuracy, stamina, score, level) {
+function saveToLocal(sport, d, t, speed, accuracy, stamina, score, level) {
     var records = getRecords();
-    records.push({ d: d, t: t, speed: speed, accuracy: accuracy, stamina: stamina, score: score, level: level });
+    records.push({ sport: sport, d: d, t: t, speed: speed, accuracy: accuracy, stamina: stamina, score: score, level: level });
     localStorage.setItem("records", JSON.stringify(records));
 }
 
 function setEl(id, val) {
     var el = document.getElementById(id);
     if (el) el.textContent = val;
+}
+
+/** Escapes HTML special characters to prevent XSS when inserting into innerHTML */
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
+function setPlaceholder(id, val) {
+    var el = document.getElementById(id);
+    if (el) el.placeholder = "e.g. " + val;
 }
 
 function clearForm() {
@@ -307,8 +398,9 @@ function localLevel(score) {
 
 function showLevelBadge(level, score) {
     var badge = document.getElementById("levelBadge"); if (!badge) return;
-    var cls = level === "Needs Improvement" ? "level-Needs" : "level-" + level;
-    badge.innerHTML = '<span class="level-badge ' + cls + '">Score: ' + parseFloat(score).toFixed(1) + ' — ' + level + '</span>';
+    var safeLevel = escapeHtml(level);
+    var cls = level === "Needs Improvement" ? "level-Needs" : "level-" + safeLevel;
+    badge.innerHTML = '<span class="level-badge ' + cls + '">Score: ' + parseFloat(score).toFixed(1) + ' — ' + safeLevel + '</span>';
 }
 
 function showToast(msg, type) {
