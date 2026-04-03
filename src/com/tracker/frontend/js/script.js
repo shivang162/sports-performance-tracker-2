@@ -240,7 +240,7 @@ function updateUI() {
     if (!tbody) return;
 
     if (!records.length) {
-        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No ' + sport + ' sessions yet. Add your first one!</td></tr>';
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="10">No ' + escapeHtml(sport) + ' sessions yet. Add your first one!</td></tr>';
         setEl("avgSpeed", "0.00"); setEl("bestSpeed", "0.00");
         drawChart([], cfg); return;
     }
@@ -251,18 +251,18 @@ function updateUI() {
     records.forEach(function (r, i) {
         totalSpeed += r.speed;
         if (r.speed > best) best = r.speed;
-        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + r.level;
+        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + escapeHtml(r.level);
         tbody.innerHTML +=
             "<tr>" +
             "<td>" + (i + 1) + "</td>" +
-            "<td>" + r.sport + "</td>" +
+            "<td>" + escapeHtml(r.sport) + "</td>" +
             "<td>" + r.d + "</td>" +
             "<td>" + r.t + " s</td>" +
             "<td>" + r.speed.toFixed(2) + "</td>" +
             "<td>" + r.accuracy + "</td>" +
             "<td>" + r.stamina + "</td>" +
             "<td>" + r.score.toFixed(1) + "</td>" +
-            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + r.level + "</span></td>" +
+            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + escapeHtml(r.level) + "</span></td>" +
             "<td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td>" +
             "</tr>";
     });
@@ -349,6 +349,16 @@ function setEl(id, val) {
     if (el) el.textContent = val;
 }
 
+/** Escapes HTML special characters to prevent XSS when inserting into innerHTML */
+function escapeHtml(str) {
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+}
+
 function setPlaceholder(id, val) {
     var el = document.getElementById(id);
     if (el) el.placeholder = "e.g. " + val;
@@ -370,8 +380,9 @@ function localLevel(score) {
 
 function showLevelBadge(level, score) {
     var badge = document.getElementById("levelBadge"); if (!badge) return;
-    var cls = level === "Needs Improvement" ? "level-Needs" : "level-" + level;
-    badge.innerHTML = '<span class="level-badge ' + cls + '">Score: ' + parseFloat(score).toFixed(1) + ' — ' + level + '</span>';
+    var safeLevel = escapeHtml(level);
+    var cls = level === "Needs Improvement" ? "level-Needs" : "level-" + safeLevel;
+    badge.innerHTML = '<span class="level-badge ' + cls + '">Score: ' + parseFloat(score).toFixed(1) + ' — ' + safeLevel + '</span>';
 }
 
 function showToast(msg, type) {
