@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>APEX Sports Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+/* ── Reset & Variables ─────────────────────────────────────── */
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --red:#E83A2F;--rd:#B52D24;--black:#0A0A0A;--card:#161616;
+  --border:#2a2a2a;--text:#F0EDE8;--muted:#666;--accent:#F5C518;
+  --green:#4ade80;--blue:#60a5fa
+}
+body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);min-height:100vh}
+
+/* ── SPA page switching ────────────────────────────────────── */
+.spa-page{display:none}
+
+/* ── Shared Nav ────────────────────────────────────────────── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:18px 40px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(10,10,10,.95);backdrop-filter:blur(10px);z-index:100}
+.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px}
+.nav-logo span{width:32px;height:32px;background:var(--red);border-radius:8px;display:grid;place-items:center;font-size:16px}
+.nav-right{display:flex;align-items:center;gap:16px}
+.nav-links{display:flex;gap:16px}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;transition:color .2s;cursor:pointer}
+.nav-links a:hover,.nav-links a.active{color:var(--text)}
+.nav-link{font-size:13px;color:var(--muted);text-decoration:none;cursor:pointer;transition:color .2s;background:none;border:none;font-family:'DM Sans',sans-serif}
+.nav-link:hover{color:var(--text)}
+.badge{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:4px 12px;border-radius:20px}
+.badge.athlete{background:rgba(96,165,250,.12);color:var(--blue);border-color:rgba(96,165,250,.3)}
+.btn-nav{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 16px;border-radius:6px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-nav:hover{border-color:var(--red);color:var(--red)}
+
+/* ── Shared Layouts ────────────────────────────────────────── */
+main{max-width:1100px;margin:0 auto;padding:40px 24px}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:2px;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:28px}
+.card.full{grid-column:1/-1}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:20px}
+
+/* ── Form elements ─────────────────────────────────────────── */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;transition:color .2s}
+.field:focus-within label{color:var(--red)}
+.field input,.field select{width:100%;background:#1e1e1e;border:1px solid var(--border);border-radius:8px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s,box-shadow .2s;-webkit-appearance:none;appearance:none}
+.field input::placeholder{color:#3a3a3a}
+.field input:focus,.field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,58,47,.1)}
+.field select{cursor:pointer}
+.btn-save{width:100%;margin-top:6px;background:var(--red);color:#fff;border:none;border-radius:8px;padding:13px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-save:hover{background:var(--rd)}
+.btn-save:active{transform:scale(.98)}
+
+/* ── Suggestions ───────────────────────────────────────────── */
+.suggestion{background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:none;align-items:flex-start;gap:12px}
+.suggestion.show{display:flex}
+.suggestion-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.suggestion-text{font-size:14px;color:var(--accent);line-height:1.6}
+
+/* ── Stat cards ────────────────────────────────────────────── */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px 24px}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px}
+.stat-value.yellow{color:var(--accent)}
+.stat-value.green{color:var(--green)}
+.stat-value.red{color:var(--red)}
+.stat-value.blue{color:var(--blue)}
+
+/* ── Level badges ──────────────────────────────────────────── */
+.level-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;margin-top:4px}
+.level-Excellent{background:rgba(74,222,128,.15);color:var(--green);border:1px solid rgba(74,222,128,.3)}
+.level-Good{background:rgba(245,197,24,.15);color:var(--accent);border:1px solid rgba(245,197,24,.3)}
+.level-Average{background:rgba(232,58,47,.15);color:#fca5a5;border:1px solid rgba(232,58,47,.3)}
+.level-Needs{background:rgba(150,150,150,.1);color:var(--muted);border:1px solid var(--border)}
+
+/* ── Tables ────────────────────────────────────────────────── */
+table{width:100%;border-collapse:collapse}
+thead th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
+tbody td{padding:12px;font-size:14px;border-bottom:1px solid #1e1e1e}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover{background:rgba(255,255,255,.02)}
+.del-btn{background:transparent;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:12px;transition:border-color .2s,color .2s}
+.del-btn:hover{border-color:var(--red);color:var(--red)}
+.empty-row td{text-align:center;color:var(--muted);padding:32px;font-size:13px}
+
+/* ── Toast ─────────────────────────────────────────────────── */
+.toast{position:fixed;bottom:28px;right:28px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px 20px;font-size:13px;color:var(--text);transform:translateY(80px);opacity:0;transition:all .3s ease;z-index:999}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.green{border-color:rgba(74,222,128,.4);color:var(--green)}
+.toast.red{border-color:rgba(232,58,47,.4);color:#f87171}
+
+/* ── Info box (athlete) ────────────────────────────────────── */
+.info-box{background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.2);border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:13px;color:var(--blue);display:flex;align-items:center;gap:10px}
+
+/* ── Accuracy report (dashboard) ──────────────────────────── */
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.report-item{background:#1e1e1e;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.report-item-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.report-item-value{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px}
+.report-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.report-bar-label{font-size:12px;color:var(--muted);min-width:120px}
+.report-bar-track{flex:1;height:8px;background:#1e1e1e;border-radius:4px;overflow:hidden}
+.report-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.report-bar-pct{font-size:12px;color:var(--text);min-width:36px;text-align:right}
+
+/* ── Compare page ──────────────────────────────────────────── */
+.input-row{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;margin-bottom:32px;align-items:end}
+.btn-compare{background:var(--red);color:#fff;border:none;border-radius:8px;padding:12px 28px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:background .2s;white-space:nowrap}
+.btn-compare:hover{background:var(--rd)}
+.btn-compare:disabled{opacity:.6;cursor:not-allowed}
+.err-box{background:rgba(232,58,47,.1);border:1px solid rgba(232,58,47,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:#f87171;margin-bottom:16px;display:none}
+.err-box.show{display:block}
+.cmp-banner{background:var(--card);border:1px solid var(--accent);border-radius:12px;padding:20px 24px;margin-bottom:24px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1px;color:var(--accent);text-align:center;display:none}
+.result-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;display:none}
+.athlete-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px}
+.athlete-card.winner{border-color:var(--accent)}
+.athlete-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:16px}
+.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #1e1e1e;font-size:14px}
+.stat-row:last-child{border-bottom:none}
+.stat-l{color:var(--muted)}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;display:none}
+.chart-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:16px}
+
+/* ── Login / Register animated background ──────────────────── */
+.login-bg{position:fixed;inset:0;pointer-events:none;z-index:0}
+.login-bg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(232,58,47,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(232,58,47,.04) 1px,transparent 1px);background-size:60px 60px;animation:bgGrid 20s linear infinite}
+.login-bg::after{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(232,58,47,.12) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);animation:bgPulse 4s ease-in-out infinite}
+@keyframes bgGrid{0%{transform:translate(0,0)}100%{transform:translate(60px,60px)}}
+@keyframes bgPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.15);opacity:.7}}
+@keyframes up{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── Login page layout ─────────────────────────────────────── */
+.login-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
+.login-inner{display:grid;grid-template-columns:1fr 1px 420px;max-width:860px;width:100%;animation:up .8s cubic-bezier(.16,1,.3,1) both}
+.brand{padding:60px 50px 60px 0;display:flex;flex-direction:column;justify-content:space-between}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:40px}
+.logo-icon{width:40px;height:40px;background:var(--red);border-radius:10px;display:grid;place-items:center;font-size:20px}
+.logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px}
+.headline{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,6vw,76px);line-height:.95;letter-spacing:2px;margin-bottom:24px}
+.headline span{color:var(--red);display:block}
+.brand-sub{font-size:14px;color:var(--muted);line-height:1.6;max-width:280px;margin-bottom:48px}
+.brand-stats{display:flex;gap:32px}
+.stat-n{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--accent);letter-spacing:1px}
+.stat-l-sm{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.vdiv{background:var(--border);width:1px}
+.login-form{padding:60px 0 60px 50px}
+.form-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:6px}
+.form-sub{font-size:13px;color:var(--muted);margin-bottom:40px}
+.field.lf{margin-bottom:20px;position:relative}
+.field.lf input{background:var(--card);padding:14px 16px}
+.field-icon{position:absolute;right:14px;bottom:14px;font-size:16px;pointer-events:none;opacity:.3}
+.login-row{display:flex;align-items:center;justify-content:space-between;margin:-6px 0 28px}
+.remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
+.remember input[type=checkbox]{appearance:none;width:16px;height:16px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:background .2s,border-color .2s}
+.remember input:checked{background:var(--red);border-color:var(--red)}
+.remember input:checked::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
+.forgot{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
+.forgot:hover{color:var(--red)}
+.btn-login{width:100%;background:var(--red);color:#fff;border:none;border-radius:8px;padding:15px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;cursor:pointer;transition:background .2s,transform .1s}
+.btn-login:hover{background:var(--rd)}
+.btn-login:active{transform:scale(.98)}
+.btn-login:disabled{opacity:.7;cursor:not-allowed}
+.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-guest{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:13px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .2s,color .2s}
+.btn-guest:hover{border-color:var(--text);color:var(--text)}
+.page-link{display:block;text-align:center;margin-top:16px;font-size:13px;color:var(--muted);cursor:pointer;transition:color .2s}
+.page-link:hover{color:var(--text)}
+.msg{border-radius:6px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.msg.show{display:block}
+.msg-err{background:rgba(232,58,47,.1);border:1px solid rgba(232,58,47,.3);color:#f87171;animation:shake .3s ease}
+.msg-suc{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.3);color:#4ade80}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── Register page layout ──────────────────────────────────── */
+.reg-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
+.reg-wrap{width:100%;max-width:440px;animation:up .6s cubic-bezier(.16,1,.3,1) both}
+.reg-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:32px}
+.reg-logo-icon{width:36px;height:36px;background:var(--red);border-radius:8px;display:grid;place-items:center;font-size:18px}
+.reg-logo-text{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px}
+.reg-title{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:2px;margin-bottom:4px}
+.reg-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
+.field.rf input,.field.rf select{background:var(--card);padding:13px 15px}
+.btn-reg{width:100%;background:var(--red);color:#fff;border:none;border-radius:8px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:background .2s,transform .1s;margin-top:4px}
+.btn-reg:hover{background:var(--rd)}
+.btn-reg:active{transform:scale(.98)}
+.btn-reg:disabled{opacity:.7;cursor:not-allowed}
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media(max-width:700px){
+  .grid,.result-grid,.input-row{grid-template-columns:1fr}
+  nav{padding:14px 20px}
+  main{padding:24px 16px}
+  .login-inner{grid-template-columns:1fr;max-width:420px}
+  .brand,.vdiv{display:none}
+  .login-form{padding:50px 0}
+}
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════
+     LOGIN PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-login" class="spa-page">
+  <div class="login-bg"></div>
+  <div class="login-outer">
+    <div class="login-inner">
+      <div class="brand">
+        <div>
+          <div class="logo-row"><div class="logo-icon">🏃</div><div class="logo-text">APEX SPORTS</div></div>
+          <div class="headline">TRACK.<br>ANALYZE.<br><span>DOMINATE.</span></div>
+          <p class="brand-sub">Your all-in-one performance hub. Log sessions, visualize progress, and push past your limits every day.</p>
+        </div>
+        <div class="brand-stats">
+          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">12K+</span><span class="stat-l-sm">Athletes</span></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">98M</span><span class="stat-l-sm">Sessions</span></div>
+          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">4.9★</span><span class="stat-l-sm">Rating</span></div>
+        </div>
+      </div>
+      <div class="vdiv"></div>
+      <div class="login-form">
+        <div class="form-title">WELCOME BACK</div>
+        <p class="form-sub">Sign in to continue your journey</p>
+        <div class="msg msg-err" id="loginErrMsg"></div>
+        <div class="msg msg-suc" id="loginSucMsg"></div>
+        <div class="field lf">
+          <label>Email</label>
+          <input type="email" id="username" placeholder="coach@example.com" autocomplete="username">
+          <span class="field-icon">👤</span>
+        </div>
+        <div class="field lf">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+          <span class="field-icon">🔒</span>
+        </div>
+        <div class="login-row">
+          <label class="remember"><input type="checkbox" id="remember"> Keep me signed in</label>
+          <a href="#" class="forgot">Forgot password?</a>
+        </div>
+        <button class="btn-login" onclick="login()" id="loginBtn">LOGIN</button>
+        <div class="divider">or</div>
+        <button class="btn-guest" onclick="guestLogin()">Continue as Guest</button>
+        <span class="page-link" onclick="showPage('register')">Don't have an account? Register</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     REGISTER PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-register" class="spa-page">
+  <div class="login-bg"></div>
+  <div class="reg-outer">
+    <div class="reg-wrap">
+      <div class="reg-logo-row"><div class="reg-logo-icon">🏃</div><div class="reg-logo-text">APEX SPORTS</div></div>
+      <div class="reg-title">CREATE ACCOUNT</div>
+      <p class="reg-sub">Join and start tracking your performance</p>
+      <div class="msg msg-err" id="regErrMsg"></div>
+      <div class="msg msg-suc" id="regSucMsg"></div>
+      <div class="field rf"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+      <div class="field rf"><label>Password (min 6 chars)</label><input type="password" id="regPass" placeholder="••••••••"></div>
+      <div class="field rf"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="••••••••"></div>
+      <div class="field rf">
+        <label>Role</label>
+        <select id="regRole"><option value="athlete">Athlete</option><option value="coach">Coach</option></select>
+      </div>
+      <button class="btn-reg" onclick="register()" id="regBtn">REGISTER</button>
+      <span class="page-link" onclick="showPage('login')" style="margin-top:20px">Already have an account? Login</span>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     COACH DASHBOARD PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-dashboard" class="spa-page">
+  <nav>
+    <div class="nav-logo"><span>🏅</span> APEX SPORTS</div>
+    <div class="nav-right">
+      <button class="nav-link" onclick="showPage('compare');initCompare()">Compare Athletes</button>
+      <span class="badge" id="userBadge">Guest</span>
+      <span class="badge" id="roleBadge" style="background:rgba(232,58,47,.15);color:#fca5a5;border-color:rgba(232,58,47,.3)">Coach</span>
+      <button class="btn-nav" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <main>
+    <div class="page-title">PERFORMANCE DASHBOARD</div>
+    <p class="page-sub">Track athlete sessions and monitor progress in real time.</p>
+    <div class="field" style="max-width:300px;margin-bottom:24px">
+      <label>Sport</label>
+      <select id="sportSelect" onchange="onSportChange()">
+        <option value="Running">🏃 Running</option>
+        <option value="Swimming">🏊 Swimming</option>
+        <option value="Basketball">🏀 Basketball</option>
+        <option value="Football">⚽ Football</option>
+        <option value="Tennis">🎾 Tennis</option>
+        <option value="Cycling">🚴 Cycling</option>
+        <option value="Weightlifting">🏋️ Weightlifting</option>
+      </select>
+    </div>
+    <div class="suggestion" id="suggestionBox">
+      <span class="suggestion-icon">💡</span>
+      <span class="suggestion-text" id="suggestionText"></span>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-label">Sessions (DB)</div><div class="stat-value yellow" id="totalSessions">—</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Score (DB)</div><div class="stat-value yellow" id="avgScore">—</div></div>
+      <div class="stat-card"><div class="stat-label">Trend (DB)</div><div class="stat-value yellow" id="stat-trend">—</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Speed</div><div class="stat-value green" id="avgSpeed">0.00</div></div>
+      <div class="stat-card"><div class="stat-label">Best Speed</div><div class="stat-value red" id="bestSpeed">0.00</div></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">ADD PERFORMANCE</div>
+        <div class="field">
+          <label for="athleteInput">Athlete Account</label>
+          <input type="email" id="athleteInput" list="athleteList" placeholder="athlete@example.com" autocomplete="off">
+          <datalist id="athleteList"></datalist>
+        </div>
+        <div class="field"><label id="lblDistance">Distance (m)</label><input type="number" id="distance" placeholder="e.g. 400" min="0"></div>
+        <div class="field"><label id="lblTime">Time (sec)</label><input type="number" id="time" placeholder="e.g. 60" min="0"></div>
+        <div class="field" id="m1Field"><label id="lblM1">Sprint Form Score (0–100)</label><input type="number" id="m1" placeholder="e.g. 75" min="0" max="100"></div>
+        <div class="field" id="m2Field"><label id="lblM2">Metric 2 (0–100)</label><input type="number" id="m2" placeholder="e.g. 65" min="0" max="100"></div>
+        <button class="btn-save" onclick="saveData()">SAVE SESSION</button>
+        <div id="levelBadge"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">SPEED OVER TIME</div>
+        <canvas id="chart"></canvas>
+      </div>
+      <div class="card full">
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+          RECORDS
+          <button class="btn-nav" onclick="resetData()" style="font-size:12px;">Reset All</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thM1">Metric 1</th><th id="thM2">Metric 2</th><th>Score</th><th>Level</th><th></th></tr>
+          </thead>
+          <tbody id="tableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div id="accuracyReport" style="display:none;margin-top:24px">
+      <div class="card full">
+        <div class="card-title">📊 ACCURACY REPORT</div>
+        <div id="reportContent"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     ATHLETE VIEW PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-athlete" class="spa-page">
+  <nav>
+    <div class="nav-logo"><span>🏅</span> APEX SPORTS</div>
+    <div class="nav-right">
+      <span class="badge" id="aUserBadge">Athlete</span>
+      <span class="badge athlete">Athlete</span>
+      <button class="btn-nav" onclick="logout()">Logout</button>
+    </div>
+  </nav>
+  <main>
+    <div class="page-title">MY PERFORMANCE</div>
+    <p class="page-sub">View your training stats and track your progress.</p>
+    <div class="info-box">
+      <span>ℹ️</span>
+      <span>Performance sessions are logged by your coach. Contact your coach to record new sessions.</span>
+    </div>
+    <div class="field" style="max-width:300px;margin-bottom:24px">
+      <label>Sport</label>
+      <select id="aSportSelect" onchange="aOnSportChange()">
+        <option value="Running">🏃 Running</option>
+        <option value="Swimming">🏊 Swimming</option>
+        <option value="Basketball">🏀 Basketball</option>
+        <option value="Football">⚽ Football</option>
+        <option value="Tennis">🎾 Tennis</option>
+        <option value="Cycling">🚴 Cycling</option>
+        <option value="Weightlifting">🏋️ Weightlifting</option>
+      </select>
+    </div>
+    <div class="suggestion" id="aSuggestionBox">
+      <span class="suggestion-icon">💡</span>
+      <span class="suggestion-text" id="aSuggestionText"></span>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-label">Total Sessions</div><div class="stat-value yellow" id="aTotalSessions">—</div></div>
+      <div class="stat-card"><div class="stat-label">Avg Score</div><div class="stat-value yellow" id="aAvgScore">—</div></div>
+      <div class="stat-card"><div class="stat-label">Trend</div><div class="stat-value yellow" id="aStatTrend">—</div></div>
+      <div class="stat-card"><div class="stat-label">Improvement</div><div class="stat-value blue" id="aStatImprovement">—</div></div>
+      <div class="stat-card"><div class="stat-label">Level</div><div id="aStatLevel" style="margin-top:8px">—</div></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="card-title">SCORE OVER TIME</div>
+        <canvas id="aChart"></canvas>
+      </div>
+      <div class="card">
+        <div class="card-title">LATEST SESSION</div>
+        <div id="aLatestBox" style="font-size:14px;color:var(--muted)">No sessions recorded yet.</div>
+      </div>
+      <div class="card full">
+        <div class="card-title">MY SESSION HISTORY</div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Sport</th><th id="aThDist">Distance</th><th>Time</th><th id="aThSpeed">Speed</th><th id="aThAcc">Metric 1</th><th id="aThM2">Metric 2</th><th>Score</th><th>Level</th></tr>
+          </thead>
+          <tbody id="aTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     COMPARE PAGE
+════════════════════════════════════════════════════════════ -->
+<div id="page-compare" class="spa-page">
+  <nav>
+    <div class="nav-logo"><span>🏅</span> APEX SPORTS</div>
+    <div class="nav-links">
+      <a onclick="showPage('dashboard');initDashboard()">Dashboard</a>
+      <a class="active">Compare</a>
+      <a onclick="logout()">Logout</a>
+    </div>
+  </nav>
+  <main style="max-width:1000px">
+    <div class="page-title">ATHLETE COMPARISON</div>
+    <p class="page-sub">Enter two athlete email addresses and select a sport to compare their performance.</p>
+    <div class="err-box" id="cmpErrBox"></div>
+    <div class="input-row" style="grid-template-columns:1fr 1fr 1fr auto">
+      <div class="field"><label>Athlete A (email)</label><input type="text" id="cmpAthleteA" placeholder="coach@example.com"></div>
+      <div class="field"><label>Athlete B (email)</label><input type="text" id="cmpAthleteB" placeholder="athlete2@example.com"></div>
+      <div class="field">
+        <label>Sport</label>
+        <select id="cmpSport" style="background:#161616">
+          <option value="Running">🏃 Running</option>
+          <option value="Swimming">🏊 Swimming</option>
+          <option value="Basketball">🏀 Basketball</option>
+          <option value="Football">⚽ Football</option>
+          <option value="Tennis">🎾 Tennis</option>
+          <option value="Cycling">🚴 Cycling</option>
+          <option value="Weightlifting">🏋️ Weightlifting</option>
+        </select>
+      </div>
+      <button class="btn-compare" onclick="compare()" id="cmpBtn">COMPARE</button>
+    </div>
+    <div class="cmp-banner" id="cmpBanner"></div>
+    <div class="result-grid" id="cmpResultGrid">
+      <div class="athlete-card" id="cmpCardA">
+        <div class="athlete-name" id="cmpNameA">—</div>
+        <div class="stat-row"><span class="stat-l">Avg Score</span><span id="cmpAvgA">—</span></div>
+        <div class="stat-row"><span class="stat-l">Level</span><span id="cmpLevelA">—</span></div>
+        <div class="stat-row"><span class="stat-l">Trend</span><span id="cmpTrendA">—</span></div>
+        <div class="stat-row"><span class="stat-l">Sessions</span><span id="cmpSessA">—</span></div>
+      </div>
+      <div class="athlete-card" id="cmpCardB">
+        <div class="athlete-name" id="cmpNameB">—</div>
+        <div class="stat-row"><span class="stat-l">Avg Score</span><span id="cmpAvgB">—</span></div>
+        <div class="stat-row"><span class="stat-l">Level</span><span id="cmpLevelB">—</span></div>
+        <div class="stat-row"><span class="stat-l">Trend</span><span id="cmpTrendB">—</span></div>
+        <div class="stat-row"><span class="stat-l">Sessions</span><span id="cmpSessB">—</span></div>
+      </div>
+    </div>
+    <div class="chart-card" id="cmpChartCard">
+      <div class="chart-title">SCORE COMPARISON</div>
+      <canvas id="cmpChart"></canvas>
+    </div>
+  </main>
+</div>
+
+<!-- ════════════════════════════════════════════════════════════
+     SHARED TOAST
+════════════════════════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+//  APEX Sports Tracker — index.html (Single Page Application)
+//  Pages: login · register · dashboard (coach) · athlete · compare
+// ═══════════════════════════════════════════════════════════════
+
+var BASE_URL = "http://localhost:8080";
+var chartInstance, aChartInst, cmpChartInst;
+
+// ── SPA Router ─────────────────────────────────────────────────
+
+var PAGE_TITLES = {
+  login:     "Sports Tracker — Login",
+  register:  "Register — Sports Tracker",
+  dashboard: "Dashboard — Sports Tracker",
+  athlete:   "My Performance — Sports Tracker",
+  compare:   "Compare Athletes — Sports Tracker"
+};
+
+function showPage(name) {
+  ["login","register","dashboard","athlete","compare"].forEach(function(p) {
+    var el = document.getElementById("page-" + p);
+    if (el) el.style.display = (p === name) ? "" : "none";
+  });
+  document.title = PAGE_TITLES[name] || "APEX Sports Tracker";
+}
+
+function route() {
+  var role  = sessionStorage.getItem("userRole")  || "";
+  var email = sessionStorage.getItem("userEmail") || "";
+  var guest = sessionStorage.getItem("guest")     || "";
+  if (!email && guest !== "true") { showPage("login"); return; }
+  if (role === "coach" || guest === "true") { showPage("dashboard"); initDashboard(); return; }
+  if (role === "athlete") { showPage("athlete"); initAthlete(); return; }
+  showPage("login");
+}
+
+function logout() {
+  sessionStorage.clear();
+  showPage("login");
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  LOGIN PAGE
+// ═══════════════════════════════════════════════════════════════
+
+function login() {
+  var email = document.getElementById("username").value.trim();
+  var pass  = document.getElementById("password").value;
+  var btn   = document.getElementById("loginBtn");
+  hideMsg("loginErrMsg"); hideMsg("loginSucMsg");
+  if (!email || !pass) { showMsg("loginErrMsg", "Please fill in both fields."); return; }
+  btn.textContent = "AUTHENTICATING..."; btn.disabled = true;
+  fetch(BASE_URL + "/login", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({email: email, password: pass})
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (!data.success) throw new Error(data.error || "Invalid credentials");
+    showMsg("loginSucMsg", data.message || "Login Successful");
+    sessionStorage.setItem("userEmail", email);
+    sessionStorage.setItem("userRole",  data.role || "athlete");
+    setTimeout(function() {
+      if (data.role === "coach") { showPage("dashboard"); initDashboard(); }
+      else { showPage("athlete"); initAthlete(); }
+      btn.textContent = "LOGIN"; btn.disabled = false;
+    }, 800);
+  })
+  .catch(function(err) {
+    showMsg("loginErrMsg", err.message || "Server not reachable. Is Java running on port 8080?");
+    btn.textContent = "LOGIN"; btn.disabled = false;
+  });
+}
+
+function guestLogin() {
+  sessionStorage.setItem("guest",     "true");
+  sessionStorage.setItem("userEmail", "Guest");
+  showPage("dashboard"); initDashboard();
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  REGISTER PAGE
+// ═══════════════════════════════════════════════════════════════
+
+function register() {
+  var email = document.getElementById("regEmail").value.trim();
+  var pass  = document.getElementById("regPass").value;
+  var conf  = document.getElementById("regConfirm").value;
+  var role  = document.getElementById("regRole").value;
+  var btn   = document.getElementById("regBtn");
+  hideMsg("regErrMsg"); hideMsg("regSucMsg");
+  if (!email || !pass || !conf) { showMsg("regErrMsg", "All fields are required."); return; }
+  if (!email.includes("@"))    { showMsg("regErrMsg", "Enter a valid email."); return; }
+  if (pass.length < 6)         { showMsg("regErrMsg", "Password must be at least 6 characters."); return; }
+  if (pass !== conf)           { showMsg("regErrMsg", "Passwords do not match."); return; }
+  btn.textContent = "REGISTERING..."; btn.disabled = true;
+  fetch(BASE_URL + "/register", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({email: email, password: pass, role: role})
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.success) {
+      showMsg("regSucMsg", "Account created! Redirecting to login...");
+      setTimeout(function() { showPage("login"); }, 1500);
+    } else {
+      showMsg("regErrMsg", d.error || "Registration failed.");
+      btn.textContent = "REGISTER"; btn.disabled = false;
+    }
+  })
+  .catch(function() {
+    showMsg("regErrMsg", "Server not reachable. Is the Java server running?");
+    btn.textContent = "REGISTER"; btn.disabled = false;
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  DASHBOARD PAGE  (coach / guest)
+// ═══════════════════════════════════════════════════════════════
+
+var SPORT_CONFIG = {
+  "Running":       { dist:"Distance (m)",        distPh:"400",   time:"Time (sec)",      timePh:"60",   m1:"Sprint Form Score (0–100)",      m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:10.5  },
+  "Swimming":      { dist:"Distance (m)",        distPh:"100",   time:"Time (sec)",      timePh:"90",   m1:"Stroke Efficiency (0–100)",       m1Ph:"70", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (m/s)",   wSpeed:0.60, wM1:0.40, wM2:0.00, maxSpeed:2.5   },
+  "Basketball":    { dist:"Shots Attempted",     distPh:"20",    time:"Duration (sec)",  timePh:"2880", m1:"Shooting Efficiency (0–100)",     m1Ph:"60", showM2:true,  m2:"Defense Rating (0–100)",   m2Ph:"65", speed:"Shot Rate",     wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0   },
+  "Football":      { dist:"Distance Covered (m)",distPh:"10000", time:"Duration (sec)",  timePh:"5400", m1:"Pass Completion % (0–100)",       m1Ph:"75", showM2:true,  m2:"Fitness Score (0–100)",    m2Ph:"70", speed:"Speed (m/s)",   wSpeed:0.30, wM1:0.40, wM2:0.30, maxSpeed:3.0   },
+  "Tennis":        { dist:"Rallies",             distPh:"20",    time:"Duration (sec)",  timePh:"3600", m1:"First Serve % (0–100)",           m1Ph:"60", showM2:true,  m2:"Footwork Score (0–100)",   m2Ph:"70", speed:"Rally Pace",    wSpeed:0.00, wM1:0.55, wM2:0.45, maxSpeed:1.0   },
+  "Cycling":       { dist:"Distance (km)",       distPh:"40",    time:"Time (sec)",      timePh:"3600", m1:"Cadence Score (0–100)",           m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Speed (km/s)",  wSpeed:0.70, wM1:0.30, wM2:0.00, maxSpeed:0.015 },
+  "Weightlifting": { dist:"Weight (kg)",         distPh:"80",    time:"Reps",            timePh:"8",    m1:"Technique Score (0–100)",         m1Ph:"75", showM2:false, m2:null,                       m2Ph:"0",  speed:"Load (kg/rep)", wSpeed:0.40, wM1:0.60, wM2:0.00, maxSpeed:25.0  }
+};
+
+function getSport() {
+  var s = document.getElementById("sportSelect");
+  return s ? s.value : "Running";
+}
+
+function onSportChange() {
+  var sport = getSport();
+  var cfg   = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+  setEl("lblDistance", cfg.dist);
+  setEl("lblTime",     cfg.time);
+  setEl("lblM1",       cfg.m1 || "Metric 1 (0–100)");
+  setPlaceholder("m1", cfg.m1Ph);
+  var m2Field = document.getElementById("m2Field");
+  if (m2Field) m2Field.style.display = cfg.showM2 ? "" : "none";
+  if (cfg.showM2) { setEl("lblM2", cfg.m2 || "Metric 2 (0–100)"); setPlaceholder("m2", cfg.m2Ph); }
+  setEl("thDistance", cfg.dist.split(" ")[0]);
+  setEl("thSpeed",    cfg.speed);
+  setEl("thM1",       cfg.m1 ? cfg.m1.split(" ")[0] : "M1");
+  var thM2El = document.getElementById("thM2");
+  if (thM2El) { thM2El.textContent = cfg.showM2 ? (cfg.m2 ? cfg.m2.split(" ")[0] : "M2") : ""; thM2El.style.display = cfg.showM2 ? "" : "none"; }
+  setPlaceholder("distance", cfg.distPh);
+  setPlaceholder("time",     cfg.timePh);
+  fetchDashboard();
+  updateUI();
+}
+
+function initDashboard() {
+  var role  = sessionStorage.getItem("userRole")  || "guest";
+  var email = sessionStorage.getItem("userEmail") || "coach@example.com";
+  setEl("userBadge",  email);
+  setEl("roleBadge",  role === "coach" ? "Coach" : "Guest");
+  var ai = document.getElementById("athleteInput");
+  if (ai) ai.value = email;
+  fetchAthletes();
+  onSportChange();
+}
+
+function fetchAthletes() {
+  fetch(BASE_URL + "/athletes")
+  .then(function(res) { return res.json(); })
+  .then(function(emails) {
+    var dl = document.getElementById("athleteList");
+    if (!dl) return;
+    dl.innerHTML = "";
+    emails.forEach(function(e) {
+      var opt = document.createElement("option");
+      opt.value = e;
+      dl.appendChild(opt);
+    });
+  })
+  .catch(function() { console.warn("[Dashboard] /athletes unavailable"); });
+}
+
+function fetchDashboard() {
+  var email = sessionStorage.getItem("userEmail") || "coach@example.com";
+  var sport = getSport();
+  fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    var s = data.summary;
+    setEl("totalSessions", s.totalSessions !== undefined ? s.totalSessions : "—");
+    setEl("avgScore",      isNaN(parseFloat(s.average)) ? "—" : parseFloat(s.average).toFixed(2));
+    var tEl = document.getElementById("stat-trend");
+    if (tEl) { tEl.textContent = s.trend; tEl.className = "stat-value " + (s.trend === "Improving" ? "green" : s.trend === "Declining" ? "red" : "yellow"); }
+    if (data.suggestion) {
+      var box = document.getElementById("suggestionBox"), txt = document.getElementById("suggestionText");
+      if (box && txt) { txt.textContent = data.suggestion; box.classList.add("show"); }
+    }
+  })
+  .catch(function() { setEl("totalSessions","—"); setEl("avgScore","—"); });
+}
+
+function saveData() {
+  var d    = parseFloat(document.getElementById("distance").value);
+  var t    = parseFloat(document.getElementById("time").value);
+  var m1   = parseFloat(document.getElementById("m1").value);
+  var sport = getSport();
+  var cfg  = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+  var m2El = document.getElementById("m2");
+  var m2   = (cfg.showM2 && m2El && m2El.value !== "") ? parseFloat(m2El.value) : 0;
+  var ai   = document.getElementById("athleteInput");
+  var athlete = (ai && ai.value.trim()) ? ai.value.trim() : (sessionStorage.getItem("userEmail") || "Demo Athlete");
+  if (!d || !t || isNaN(m1))             { showToast("Please fill in all required fields.", "red"); return; }
+  if (t <= 0)                            { showToast("Time must be greater than 0.", "red"); return; }
+  if (m1 < 0 || m1 > 100)               { showToast((cfg.m1 || "Metric 1") + " must be 0–100.", "red"); return; }
+  if (cfg.showM2 && (m2 < 0 || m2 > 100)) { showToast((cfg.m2 || "Metric 2") + " must be 0–100.", "red"); return; }
+  fetch(BASE_URL + "/save", {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({athlete: athlete, sport: sport, distance: d, time: t, accuracy: m1, stamina: m2})
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (!data.success) { showToast(data.error || "Save failed.", "red"); return; }
+    saveToLocal(athlete, sport, d, t, data.speed, m1, m2, data.score, data.level);
+    showLevelBadge(data.level, data.score);
+    showToast("Saved for " + escapeHtml(athlete) + "! Score: " + parseFloat(data.score).toFixed(1) + " — " + data.level);
+    if (data.report) showAccuracyReport(data, cfg);
+    clearForm(); updateUI(); fetchDashboard();
+  })
+  .catch(function() {
+    var speed    = d / t;
+    var maxSpd   = cfg.maxSpeed > 0 ? cfg.maxSpeed : 10.0;
+    var normSpd  = Math.min(speed / maxSpd * 100, 100);
+    var score    = Math.min((normSpd * cfg.wSpeed) + (m1 * cfg.wM1) + (m2 * cfg.wM2), 100);
+    var level    = localLevel(score);
+    saveToLocal(athlete, sport, d, t, speed, m1, m2, score, level);
+    showLevelBadge(level, score);
+    showToast("Saved locally (server offline). Score: " + score.toFixed(1), "red");
+    clearForm(); updateUI();
+  });
+}
+
+function showAccuracyReport(data, cfg) {
+  var rpt        = data.report;
+  var reportDiv  = document.getElementById("accuracyReport");
+  var reportContent = document.getElementById("reportContent");
+  if (!reportDiv || !reportContent) return;
+  var score      = parseFloat(data.score).toFixed(1);
+  var level      = escapeHtml(data.level);
+  var levelCls   = data.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
+  var changeHtml = "";
+  if (rpt.hasPrev) {
+    var chg = parseFloat(rpt.scoreChange), sign = chg >= 0 ? "+" : "";
+    var color = chg > 0 ? "var(--green)" : chg < 0 ? "var(--red)" : "var(--muted)";
+    changeHtml = "<span style='color:" + color + ";font-size:13px'>" + sign + chg.toFixed(1) + " pts vs last session</span>";
+  } else {
+    changeHtml = "<span style='color:var(--muted);font-size:13px'>First session for this sport</span>";
+  }
+  var nextHtml = rpt.nextLevel !== "Peak"
+    ? "<div style='font-size:13px;color:var(--muted);margin-top:6px'>" + parseFloat(rpt.pointsToNext).toFixed(1) + " pts to reach <strong style='color:var(--text)'>" + escapeHtml(rpt.nextLevel) + "</strong></div>"
+    : "<div style='font-size:13px;color:var(--green);margin-top:6px'>🏆 Peak performance!</div>";
+  var bars = "";
+  [{label: "Speed (" + cfg.speed + ")", contrib: rpt.speedContrib, color: "#E83A2F", hide: cfg.wSpeed === 0},
+   {label: cfg.m1 || "Metric 1",        contrib: rpt.m1Contrib,    color: "#F5C518", hide: false},
+   {label: cfg.m2 || "Metric 2",        contrib: rpt.m2Contrib,    color: "#60a5fa", hide: !cfg.showM2}
+  ].forEach(function(item) {
+    if (item.hide) return;
+    var pct = Math.round(parseFloat(item.contrib));
+    bars += "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(item.label) + "</span>" +
+            "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + pct + "%;background:" + item.color + "'></div></div>" +
+            "<span class='report-bar-pct'>" + pct + " pts</span></div>";
+  });
+  reportContent.innerHTML =
+    "<div class='report-grid'>" +
+    "<div class='report-item'><div class='report-item-label'>Score</div><div class='report-item-value' style='color:var(--accent)'>" + score + "</div>" +
+    "<div style='margin-top:4px'><span class='level-badge " + levelCls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></div></div>" +
+    "<div class='report-item'><div class='report-item-label'>Sessions (this sport)</div><div class='report-item-value' style='color:var(--green)'>" + (rpt.sessionCount || 1) + "</div>" + changeHtml + "</div>" +
+    "<div class='report-item'><div class='report-item-label'>Next Goal</div><div class='report-item-value' style='color:var(--blue);font-size:20px'>" + (rpt.nextLevel === "Peak" ? "🏆" : escapeHtml(rpt.nextLevel)) + "</div>" + nextHtml + "</div>" +
+    "</div>" +
+    "<div style='margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)'>Score Breakdown</div>" +
+    bars;
+  reportDiv.style.display = "";
+  reportDiv.scrollIntoView({behavior: "smooth", block: "nearest"});
+}
+
+function updateUI() {
+  var sport   = getSport();
+  var records = getRecords().filter(function(r) { return r.sport === sport; });
+  var cfg     = SPORT_CONFIG[sport] || SPORT_CONFIG["Running"];
+  var tbody   = document.getElementById("tableBody");
+  if (!tbody) return;
+  if (!records.length) {
+    tbody.innerHTML = "<tr class='empty-row'><td colspan='11'>No " + escapeHtml(sport) + " sessions yet. Add your first one!</td></tr>";
+    setEl("avgSpeed", "0.00"); setEl("bestSpeed", "0.00");
+    drawChart([], cfg); return;
+  }
+  var totalSpeed = 0, best = 0;
+  tbody.innerHTML = "";
+  records.forEach(function(r, i) {
+    var sportL   = escapeHtml(r.sport);
+    var athleteL = escapeHtml(r.athlete || "—");
+    var d        = parseFloat(r.d), t = parseFloat(r.t), speed = parseFloat(r.speed);
+    var m1v      = parseFloat(r.accuracy), m2v = parseFloat(r.stamina);
+    var score    = parseFloat(r.score), level = escapeHtml(r.level);
+    totalSpeed += speed; if (speed > best) best = speed;
+    var cls    = r.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
+    var m2Cell = cfg.showM2 ? "<td>" + m2v + "</td>" : "<td></td>";
+    tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td style='font-size:12px;color:var(--muted)'>" + athleteL + "</td><td>" + sportL + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + m1v + "</td>" + m2Cell + "<td>" + score.toFixed(1) + "</td><td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td><td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td></tr>";
+  });
+  setEl("avgSpeed",  (totalSpeed / records.length).toFixed(2));
+  setEl("bestSpeed", best.toFixed(2));
+  drawChart(records, cfg);
+}
+
+function drawChart(records, cfg) {
+  var canvas  = document.getElementById("chart");
+  if (!canvas) return;
+  var sportCfg = cfg || SPORT_CONFIG[getSport()] || SPORT_CONFIG["Running"];
+  var labels   = records.map(function(_, i) { return "#" + (i+1); });
+  var speeds   = records.map(function(r) { return parseFloat(r.speed).toFixed(2); });
+  if (chartInstance) chartInstance.destroy();
+  chartInstance = new Chart(canvas, {
+    type: "line",
+    data: {labels: labels, datasets: [{label: sportCfg.speed, data: speeds, fill: true, borderColor: "#E83A2F", backgroundColor: "rgba(232,58,47,0.08)", pointBackgroundColor: "#E83A2F", tension: 0.4}]},
+    options: {responsive: true, plugins: {legend: {labels: {color: "#666"}}}, scales: {x: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}, y: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}}}
+  });
+}
+
+function deleteRow(i) {
+  var sport = getSport(), all = getRecords(), sportIdxs = [];
+  all.forEach(function(r, idx) { if (r.sport === sport) sportIdxs.push(idx); });
+  if (i < sportIdxs.length) { all.splice(sportIdxs[i], 1); localStorage.setItem("records", JSON.stringify(all)); }
+  updateUI(); showToast("Record removed.");
+}
+
+function resetData() {
+  if (!confirm("Reset all local records?")) return;
+  localStorage.removeItem("records");
+  updateUI(); showToast("All records cleared.");
+}
+
+function clearForm() {
+  ["distance","time","m1","m2"].forEach(function(id) { var el = document.getElementById(id); if (el) el.value = ""; });
+}
+
+function showLevelBadge(level, score) {
+  var badge = document.getElementById("levelBadge"); if (!badge) return;
+  var safeLevel = escapeHtml(level);
+  var cls = level === "Needs Improvement" ? "level-Needs" : "level-" + safeLevel;
+  badge.innerHTML = "<span class='level-badge " + cls + "'>Score: " + parseFloat(score).toFixed(1) + " — " + safeLevel + "</span>";
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  ATHLETE PAGE
+// ═══════════════════════════════════════════════════════════════
+
+// Labels for the athlete read-only view (mirror SPORT_CONFIG)
+var A_SPORT_CONFIG = {
+  "Running":       { dist:"Distance (m)",    speed:"Speed (m/s)",   m1:"Sprint Form",       showM2:false, m2:"" },
+  "Swimming":      { dist:"Distance (m)",    speed:"Speed (m/s)",   m1:"Stroke Efficiency", showM2:false, m2:"" },
+  "Basketball":    { dist:"Shots Attempted", speed:"Shot Rate",     m1:"Shoot. Eff.",        showM2:true,  m2:"Defense" },
+  "Football":      { dist:"Distance (m)",    speed:"Speed (m/s)",   m1:"Pass Comp. %",       showM2:true,  m2:"Fitness" },
+  "Tennis":        { dist:"Rallies",         speed:"Rally Pace",    m1:"First Serve %",      showM2:true,  m2:"Footwork" },
+  "Cycling":       { dist:"Distance (km)",   speed:"Speed (km/s)",  m1:"Cadence Score",      showM2:false, m2:"" },
+  "Weightlifting": { dist:"Weight (kg)",     speed:"Load (kg/rep)", m1:"Technique",           showM2:false, m2:"" }
+};
+
+function initAthlete() {
+  var email = sessionStorage.getItem("userEmail") || "";
+  setEl("aUserBadge", email);
+  aOnSportChange();
+}
+
+function aGetSport() {
+  var s = document.getElementById("aSportSelect");
+  return s ? s.value : "Running";
+}
+
+function aOnSportChange() {
+  var cfg = A_SPORT_CONFIG[aGetSport()] || A_SPORT_CONFIG["Running"];
+  var el;
+  el = document.getElementById("aThDist");  if (el) el.textContent = cfg.dist.split(" ")[0];
+  el = document.getElementById("aThSpeed"); if (el) el.textContent = cfg.speed;
+  el = document.getElementById("aThAcc");   if (el) el.textContent = cfg.m1;
+  el = document.getElementById("aThM2");    if (el) { el.textContent = cfg.showM2 ? cfg.m2 : ""; el.style.display = cfg.showM2 ? "" : "none"; }
+  aFetchDashboard();
+  aFetchRecords();
+}
+
+function aFetchDashboard() {
+  var email = sessionStorage.getItem("userEmail") || "";
+  var sport = aGetSport();
+  if (!email) return;
+  fetch(BASE_URL + "/dashboard?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    var s = data.summary;
+    setEl("aTotalSessions",   s.totalSessions !== undefined ? s.totalSessions : "—");
+    setEl("aAvgScore",        isNaN(parseFloat(s.average))     ? "—" : parseFloat(s.average).toFixed(2));
+    setEl("aStatImprovement", isNaN(parseFloat(s.improvement)) ? "—" : parseFloat(s.improvement).toFixed(1) + "%");
+    var tEl = document.getElementById("aStatTrend");
+    if (tEl) { tEl.textContent = s.trend; tEl.className = "stat-value " + (s.trend === "Improving" ? "green" : s.trend === "Declining" ? "red" : "yellow"); }
+    var lvlEl = document.getElementById("aStatLevel");
+    if (lvlEl && s.level) { lvlEl.innerHTML = "<span class='level-badge " + aLevelClass(s.level) + "'>" + escapeHtml(s.level) + "</span>"; }
+    if (data.suggestion) {
+      var box = document.getElementById("aSuggestionBox"), txt = document.getElementById("aSuggestionText");
+      if (box && txt) { txt.textContent = data.suggestion; box.classList.add("show"); }
+    }
+    if (data.scores && data.scores.length) aDrawChart(data.scores);
+  })
+  .catch(function() { setEl("aTotalSessions","—"); setEl("aAvgScore","—"); setEl("aStatTrend","—"); });
+}
+
+function aFetchRecords() {
+  var email = sessionStorage.getItem("userEmail") || "";
+  var sport = aGetSport();
+  if (!email) return;
+  fetch(BASE_URL + "/records?athlete=" + encodeURIComponent(email) + "&sport=" + encodeURIComponent(sport))
+  .then(function(r) { return r.json(); })
+  .then(function(all) {
+    var records = all.filter(function(r) { return r.sport === sport; });
+    var tbody = document.getElementById("aTableBody");
+    if (!tbody) return;
+    if (!records.length) {
+      tbody.innerHTML = "<tr class='empty-row'><td colspan='9'>No " + escapeHtml(sport) + " sessions recorded yet.</td></tr>";
+      setEl("aLatestBox", "No sessions recorded yet."); aDrawChart([]); return;
+    }
+    tbody.innerHTML = "";
+    records.forEach(function(r, i) {
+      var cfg_   = A_SPORT_CONFIG[r.sport] || A_SPORT_CONFIG["Running"];
+      var level  = escapeHtml(r.level), sport_ = escapeHtml(r.sport);
+      var d      = parseFloat(r.distance), t = parseFloat(r.time), speed = parseFloat(r.speed);
+      var m1v    = parseFloat(r.accuracy), m2v = parseFloat(r.stamina), score = parseFloat(r.score);
+      var m2Cell = cfg_.showM2 ? "<td>" + m2v + "</td>" : "<td></td>";
+      tbody.innerHTML += "<tr><td>" + (i+1) + "</td><td>" + sport_ + "</td><td>" + d + "</td><td>" + t + " s</td><td>" + speed.toFixed(2) + "</td><td>" + m1v + "</td>" + m2Cell + "<td>" + score.toFixed(1) + "</td><td><span class='level-badge " + aLevelClass(r.level) + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td></tr>";
+    });
+    var last    = records[records.length - 1];
+    var lastCfg = A_SPORT_CONFIG[last.sport] || A_SPORT_CONFIG["Running"];
+    var latestEl = document.getElementById("aLatestBox");
+    if (latestEl) {
+      var lLvl  = escapeHtml(last.level);
+      var m2Row = lastCfg.showM2
+        ? "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>" + escapeHtml(lastCfg.m2) + "</span><span>" + parseFloat(last.stamina) + "</span></div>"
+        : "";
+      latestEl.innerHTML =
+        "<div style='display:flex;flex-direction:column;gap:10px'>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>" + escapeHtml(last.sport) + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Score</span><span style='color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:24px'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge " + aLevelClass(last.level) + "' style='font-size:11px;padding:3px 10px'>" + lLvl + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>" + parseFloat(last.speed).toFixed(2) + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>" + escapeHtml(lastCfg.m1) + "</span><span>" + parseFloat(last.accuracy) + "</span></div>" +
+        m2Row + "</div>";
+    }
+  })
+  .catch(function() { console.warn("[Athlete] /records unavailable"); });
+}
+
+function aDrawChart(scores) {
+  var canvas = document.getElementById("aChart");
+  if (!canvas) return;
+  var labels = scores.map(function(_, i) { return "#" + (i+1); });
+  if (aChartInst) aChartInst.destroy();
+  aChartInst = new Chart(canvas, {
+    type: "line",
+    data: {labels: labels, datasets: [{label: "Score", data: scores, fill: true, borderColor: "#60a5fa", backgroundColor: "rgba(96,165,250,0.08)", pointBackgroundColor: "#60a5fa", tension: 0.4}]},
+    options: {responsive: true, plugins: {legend: {labels: {color: "#666"}}}, scales: {x: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}, y: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}, beginAtZero: true}}}
+  });
+}
+
+function aLevelClass(level) {
+  if (level === "Excellent") return "level-Excellent";
+  if (level === "Good")      return "level-Good";
+  if (level === "Average")   return "level-Average";
+  return "level-Needs";
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  COMPARE PAGE
+// ═══════════════════════════════════════════════════════════════
+
+function initCompare() {
+  var role = sessionStorage.getItem("userRole") || "guest";
+  if (role !== "coach" && role !== "guest") { showPage("athlete"); initAthlete(); }
+}
+
+function compare() {
+  var nA   = document.getElementById("cmpAthleteA").value.trim();
+  var nB   = document.getElementById("cmpAthleteB").value.trim();
+  var sport = document.getElementById("cmpSport").value;
+  var btn  = document.getElementById("cmpBtn");
+  cmpHideErr();
+  if (!nA || !nB)  { cmpShowErr("Please enter both athlete emails."); return; }
+  if (nA === nB)   { cmpShowErr("Please enter two different athletes."); return; }
+  btn.textContent = "COMPARING..."; btn.disabled = true;
+  fetch(BASE_URL + "/records")
+  .then(function(r) { return r.json(); })
+  .then(function(all) {
+    var recA = all.filter(function(r) { return r.athlete === nA && r.sport === sport; });
+    var recB = all.filter(function(r) { return r.athlete === nB && r.sport === sport; });
+    if (!recA.length && !recB.length) { cmpShowErr("No " + sport + " records found for either athlete."); btn.textContent = "COMPARE"; btn.disabled = false; return; }
+    var avgA = recA.length ? recA.reduce(function(s,r) { return s + r.score; }, 0) / recA.length : 0;
+    var avgB = recB.length ? recB.reduce(function(s,r) { return s + r.score; }, 0) / recB.length : 0;
+    var lvlA = cmpGetLevel(avgA), lvlB = cmpGetLevel(avgB);
+    var trA  = cmpDetectTrend(recA.map(function(r) { return r.score; }));
+    var trB  = cmpDetectTrend(recB.map(function(r) { return r.score; }));
+    setEl("cmpNameA", nA); setEl("cmpAvgA", avgA.toFixed(2));
+    document.getElementById("cmpLevelA").innerHTML = "<span class='level-badge " + cmpLevelClass(lvlA) + "'>" + lvlA + "</span>";
+    setEl("cmpTrendA", trA); setEl("cmpSessA", recA.length);
+    setEl("cmpNameB", nB); setEl("cmpAvgB", avgB.toFixed(2));
+    document.getElementById("cmpLevelB").innerHTML = "<span class='level-badge " + cmpLevelClass(lvlB) + "'>" + lvlB + "</span>";
+    setEl("cmpTrendB", trB); setEl("cmpSessB", recB.length);
+    document.getElementById("cmpCardA").classList.remove("winner");
+    document.getElementById("cmpCardB").classList.remove("winner");
+    var winTxt;
+    if (avgA > avgB)      { winTxt = nA.split("@")[0].toUpperCase() + " IS PERFORMING BETTER"; document.getElementById("cmpCardA").classList.add("winner"); }
+    else if (avgB > avgA) { winTxt = nB.split("@")[0].toUpperCase() + " IS PERFORMING BETTER"; document.getElementById("cmpCardB").classList.add("winner"); }
+    else winTxt = "BOTH ATHLETES ARE EQUAL";
+    var banner = document.getElementById("cmpBanner");
+    banner.textContent = winTxt; banner.style.display = "block";
+    document.getElementById("cmpResultGrid").style.display = "grid";
+    document.getElementById("cmpChartCard").style.display  = "block";
+    if (cmpChartInst) cmpChartInst.destroy();
+    cmpChartInst = new Chart(document.getElementById("cmpChart"), {
+      type: "bar",
+      data: {labels: ["Avg Score","Sessions"], datasets: [{label:nA, data:[+avgA.toFixed(2),recA.length], backgroundColor:"#E83A2F"},{label:nB, data:[+avgB.toFixed(2),recB.length], backgroundColor:"#F5C518"}]},
+      options: {responsive:true, plugins:{legend:{labels:{color:"#666"}}}, scales:{x:{ticks:{color:"#666"},grid:{color:"#1e1e1e"}},y:{ticks:{color:"#666"},grid:{color:"#1e1e1e"},beginAtZero:true}}}
+    });
+    btn.textContent = "COMPARE"; btn.disabled = false;
+  })
+  .catch(function() { cmpShowErr("Server not reachable. Make sure the Java server is running."); btn.textContent = "COMPARE"; btn.disabled = false; });
+}
+
+function cmpShowErr(m) { var e = document.getElementById("cmpErrBox"); e.textContent = m; e.classList.add("show"); }
+function cmpHideErr()  { document.getElementById("cmpErrBox").classList.remove("show"); }
+function cmpGetLevel(s) { return s >= 85 ? "Excellent" : s >= 70 ? "Good" : s >= 50 ? "Average" : "Needs Improvement"; }
+function cmpLevelClass(l) { return l === "Excellent" ? "level-Excellent" : l === "Good" ? "level-Good" : l === "Average" ? "level-Average" : "level-Needs"; }
+function cmpDetectTrend(scores) {
+  var n = scores.length; if (n < 2) return "Stable";
+  var sx=0,sy=0,sxy=0,sx2=0;
+  for (var i = 0; i < n; i++) { sx+=i; sy+=scores[i]; sxy+=i*scores[i]; sx2+=i*i; }
+  var d = (n*sx2) - (sx*sx); if (d === 0) return "Stable";
+  var slope = ((n*sxy) - (sx*sy)) / d;
+  return slope > 0.5 ? "Improving" : slope < -0.5 ? "Declining" : "Stable";
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  SHARED HELPERS
+// ═══════════════════════════════════════════════════════════════
+
+function getRecords() { return JSON.parse(localStorage.getItem("records")) || []; }
+
+function saveToLocal(athlete, sport, d, t, speed, m1, m2, score, level) {
+  var records = getRecords();
+  records.push({athlete:athlete, sport:sport, d:d, t:t, speed:speed, accuracy:m1, stamina:m2, score:score, level:level});
+  localStorage.setItem("records", JSON.stringify(records));
+}
+
+function localLevel(score) {
+  if (score >= 85) return "Excellent";
+  if (score >= 70) return "Good";
+  if (score >= 50) return "Average";
+  return "Needs Improvement";
+}
+
+function setEl(id, val) { var el = document.getElementById(id); if (el) el.textContent = val; }
+function setPlaceholder(id, val) { var el = document.getElementById(id); if (el) el.placeholder = "e.g. " + val; }
+
+function escapeHtml(str) {
+  return String(str).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+}
+
+function showMsg(id, msg) { var el = document.getElementById(id); if (!el) return; el.textContent = msg; el.classList.add("show"); }
+function hideMsg(id)      { var el = document.getElementById(id); if (el) el.classList.remove("show"); }
+
+function showToast(msg, type) {
+  var t = document.getElementById("toast"); if (!t) return;
+  t.textContent = msg;
+  t.className   = "toast " + (type || "green") + " show";
+  setTimeout(function() { t.classList.remove("show"); }, 2800);
+}
+
+// ── Keyboard shortcuts ─────────────────────────────────────────
+document.addEventListener("keydown", function(e) {
+  if (e.key !== "Enter") return;
+  var activePage = null;
+  ["login","register","compare"].forEach(function(p) {
+    var el = document.getElementById("page-" + p);
+    if (el && el.style.display !== "none") activePage = p;
+  });
+  if (activePage === "login")    login();
+  if (activePage === "register") register();
+  if (activePage === "compare")  compare();
+});
+
+// ── Boot ───────────────────────────────────────────────────────
+window.onload = function() { route(); };
+</script>
+</body>
+</html>
