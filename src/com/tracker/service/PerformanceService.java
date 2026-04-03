@@ -9,14 +9,14 @@ import java.util.Map;
  * calculateScore, calculateAverage, detectTrend,
  * calculatePeriodImprovement, getDashboardStats, generateReport
  *
- * Efficiency is now computed automatically from the athlete's speed relative
- * to a sport-specific benchmark maximum speed.  Coaches no longer enter
- * manual metric values; the system derives the efficiency score entirely from
- * distance and time.
+ * Score blends normalised speed (distance ÷ time vs sport-specific benchmark)
+ * with coach-entered skill metrics m1 and m2 (each 0–100) using per-sport
+ * weights.  Weights reflect the primary performance drivers for each sport
+ * (e.g. Basketball/Tennis are skill-only: wSpeed=0; Running/Cycling rely
+ * heavily on speed).
  *
- * Score = (speed / maxSpeed) * 100, clamped to 0–100.
- * The "accuracy" DB column stores this normalised speed efficiency (0–100).
- * The "stamina"  DB column is kept for schema compatibility and set to 0.
+ * Score = wSpeed*(speed/maxSpeed*100) + wM1*m1 + wM2*m2, clamped to 0–100.
+ * The "accuracy" DB column stores m1; the "stamina" column stores m2.
  */
 public class PerformanceService {
 
@@ -44,23 +44,24 @@ public class PerformanceService {
 
     /**
      * Sport-specific scoring weights: [wSpeed, wM1, wM2].
-     * Since efficiency is now auto-calculated from speed, all sports use
-     * 100 % speed weight.  M1/M2 inputs have been removed from the UI.
+     * wSpeed applies to the normalised speed (distance/time vs max benchmark).
+     * wM1 and wM2 apply to the coach-entered metric scores (each 0–100).
+     * For Basketball and Tennis speed is not a primary scoring metric (wSpeed=0);
+     * those sports rely entirely on the coach-entered skill metrics.
      */
     private static final Map<String, double[]> SPORT_WEIGHTS = Map.of(
-        "Running",       new double[]{1.00, 0.00, 0.00},
-        "Swimming",      new double[]{1.00, 0.00, 0.00},
-        "Basketball",    new double[]{1.00, 0.00, 0.00},
-        "Football",      new double[]{1.00, 0.00, 0.00},
-        "Tennis",        new double[]{1.00, 0.00, 0.00},
-        "Cycling",       new double[]{1.00, 0.00, 0.00},
-        "Weightlifting", new double[]{1.00, 0.00, 0.00}
+        "Running",       new double[]{0.60, 0.40, 0.00},
+        "Swimming",      new double[]{0.60, 0.40, 0.00},
+        "Basketball",    new double[]{0.00, 0.55, 0.45},
+        "Football",      new double[]{0.30, 0.40, 0.30},
+        "Tennis",        new double[]{0.00, 0.55, 0.45},
+        "Cycling",       new double[]{0.70, 0.30, 0.00},
+        "Weightlifting", new double[]{0.40, 0.60, 0.00}
     );
 
     /**
-     * Calculates a 0–100 efficiency score using the athlete's normalised speed.
-     * m1 and m2 are retained in the signature for DB compatibility but are
-     * no longer coach-entered; they are set to 0 by the controller.
+     * Calculates a 0–100 performance score blending normalised speed with
+     * coach-entered skill metrics m1 and m2 (each 0–100) using per-sport weights.
      */
     public double calculateScore(double speed, double m1, double m2, String sport) {
         double[] w       = SPORT_WEIGHTS.getOrDefault(sport, new double[]{0.40, 0.30, 0.30});
