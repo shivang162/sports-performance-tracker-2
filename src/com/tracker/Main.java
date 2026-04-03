@@ -42,6 +42,7 @@ public class Main {
         server.createContext("/save",      new PerformanceController());
         server.createContext("/dashboard", new DashboardController());
         server.createContext("/records",   new RecordsController());
+        server.createContext("/athletes",  new AthleteListController());
         server.setExecutor(null);
         server.start();
 
@@ -56,6 +57,7 @@ public class Main {
         System.out.println("  POST /save      — save session to DB");
         System.out.println("  GET  /dashboard — stats + suggestion");
         System.out.println("  GET  /records   — all records");
+        System.out.println("  GET  /athletes  — list athlete accounts");
         System.out.println("\nOpen frontend/login.html in your browser.");
     }
 }

@@ -9,8 +9,12 @@ import java.nio.charset.StandardCharsets;
 
 /**
  * POST /save
- * Reads sport/distance/time/accuracy/stamina/athlete → validates → calculates
- * speed+score+level (sport-specific weights) → saves to SQLite → returns JSON
+ * Reads sport/distance/time/accuracy(=m1)/stamina(=m2)/athlete → validates →
+ * calculates speed + normalised score + level (sport-specific weights) →
+ * saves to SQLite → generates accuracy report → returns JSON
+ *
+ * The "accuracy" and "stamina" request fields now carry sport-specific metric
+ * values (m1 / m2).  They are still stored in the accuracy/stamina DB columns.
  */
 public class PerformanceController implements HttpHandler {
 
@@ -30,30 +34,42 @@ public class PerformanceController implements HttpHandler {
             String body = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             System.out.println("[PerformanceController] " + body);
 
-            String athlete  = jsonStr(body,"athlete");
-            String sport    = jsonStr(body,"sport");
-            double distance = jsonNum(body,"distance");
-            double timeSec  = jsonNum(body,"time");
-            double accuracy = jsonNum(body,"accuracy");
-            double stamina  = jsonNum(body,"stamina");
+            String athlete = jsonStr(body,"athlete");
+            String sport   = jsonStr(body,"sport");
+            double distance= jsonNum(body,"distance");
+            double timeSec = jsonNum(body,"time");
+            // "accuracy" field now carries sport-specific metric-1 value (0–100)
+            // "stamina"  field now carries sport-specific metric-2 value (0–100, or 0 if unused)
+            double m1      = jsonNum(body,"accuracy");
+            double m2      = jsonNumOpt(body,"stamina", 0.0);
 
             if (athlete==null||athlete.isBlank()) athlete="Unknown";
             if (sport==null||sport.isBlank())     sport="Running";
             if (distance<=0) { send(ex,400,fmt.formatError("Distance must be > 0")); return; }
             if (timeSec<=0)  { send(ex,400,fmt.formatError("Time must be > 0")); return; }
 
-            double speed = distance/timeSec;
+            double speed = distance / timeSec;
 
-            if (!vs.validateSpeed(speed))    { send(ex,400,fmt.formatError("Speed out of range 0–200")); return; }
-            if (!vs.validateAccuracy(accuracy)){ send(ex,400,fmt.formatError("Accuracy must be 0–100")); return; }
-            if (!vs.validateStamina(stamina)) { send(ex,400,fmt.formatError("Stamina must be 0–100")); return; }
+            if (!vs.validateSpeedForSport(speed, sport)) {
+                send(ex,400,fmt.formatError("Speed out of range for this sport")); return;
+            }
+            if (!vs.validateMetric(m1)) {
+                send(ex,400,fmt.formatError("Metric 1 must be 0–100")); return;
+            }
+            if (!vs.validateMetric(m2)) {
+                send(ex,400,fmt.formatError("Metric 2 must be 0–100")); return;
+            }
 
-            double score = ps.calculateScore(speed, accuracy, stamina, sport);
+            double score = ps.calculateScore(speed, m1, m2, sport);
             String level = pl.getLevel(score);
 
-            dao.insertRecord(athlete, sport, distance, timeSec, speed, accuracy, stamina, score, level);
+            // Store m1 in accuracy column, m2 in stamina column (schema unchanged)
+            dao.insertRecord(athlete, sport, distance, timeSec, speed, m1, m2, score, level);
 
-            send(ex, 200, fmt.formatSaveResponse(athlete, sport, speed, accuracy, stamina, score, level));
+            // Generate accuracy report after insert (getAllScores now includes new row)
+            PerformanceService.AccuracyReport report = ps.generateReport(speed, m1, m2, sport, score, athlete);
+
+            send(ex, 200, fmt.formatSaveResponseWithReport(athlete, sport, speed, m1, m2, score, level, report));
             System.out.println("[PerformanceController] sport="+sport+" Score="+score+" Level="+level);
 
         } catch (NumberFormatException e) {
@@ -70,6 +86,10 @@ public class PerformanceController implements HttpHandler {
         int end=body.indexOf(",",c); if(end==-1) end=body.indexOf("}",c);
         if(end==-1) throw new NumberFormatException("Malformed JSON for: "+key);
         return Double.parseDouble(body.substring(c+1,end).trim());
+    }
+
+    private double jsonNumOpt(String body, String key, double def) {
+        try { return jsonNum(body, key); } catch (NumberFormatException e) { return def; }
     }
 
     private String jsonStr(String body, String key) {

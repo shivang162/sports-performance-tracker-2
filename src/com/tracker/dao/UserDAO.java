@@ -119,4 +119,19 @@ public class UserDAO {
         }
         return "athlete";
     }
+
+    /** Returns all registered athlete emails sorted alphabetically. */
+    public java.util.List<String> listAthleteEmails() {
+        java.util.List<String> emails = new java.util.ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT email FROM users WHERE role='athlete' ORDER BY email ASC")) {
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) emails.add(rs.getString("email"));
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDAO] listAthleteEmails: " + e.getMessage());
+        }
+        return emails;
+    }
 }

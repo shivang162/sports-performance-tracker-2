@@ -16,6 +16,31 @@ public class RecordFormatter {
                 .replace("\t", "\\t");
     }
 
+    /**
+     * Save response that includes a full accuracy report for the coach to review.
+     * m1 / m2 correspond to the sport-specific metrics (stored in accuracy/stamina columns).
+     */
+    public String formatSaveResponseWithReport(String athlete, String sport,
+                                               double speed, double m1, double m2,
+                                               double score, String level,
+                                               PerformanceService.AccuracyReport rpt) {
+        return String.format(
+            "{\"success\":true,\"athlete\":\"%s\",\"sport\":\"%s\"," +
+            "\"speed\":%.2f,\"m1\":%.2f,\"m2\":%.2f," +
+            "\"score\":%.2f,\"level\":\"%s\"," +
+            "\"report\":{\"speedNorm\":%.1f,\"speedContrib\":%.1f," +
+            "\"m1Contrib\":%.1f,\"m2Contrib\":%.1f," +
+            "\"hasPrev\":%b,\"prevScore\":%.1f,\"scoreChange\":%.1f," +
+            "\"pointsToNext\":%.1f,\"nextLevel\":\"%s\",\"sessionCount\":%d}}",
+            jsonEscape(athlete), jsonEscape(sport),
+            speed, m1, m2, score, jsonEscape(level),
+            rpt.speedNorm, rpt.speedContrib,
+            rpt.m1Contrib, rpt.m2Contrib,
+            rpt.hasPrev, rpt.prevScore, rpt.scoreChange,
+            rpt.pointsToNext, jsonEscape(rpt.nextLevel), rpt.sessionCount);
+    }
+
+    // Kept for backwards compatibility
     public String formatSaveResponse(String athlete, String sport, double speed,
                                      double accuracy, double stamina,
                                      double score, String level) {

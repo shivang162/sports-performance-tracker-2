@@ -85,6 +85,17 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
 .toast.green{border-color:rgba(74,222,128,.4);color:var(--green)}
 .toast.red{border-color:rgba(232,58,47,.4);color:#f87171}
 
+/* ACCURACY REPORT */
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
+.report-item{background:#1e1e1e;border:1px solid var(--border);border-radius:8px;padding:14px 16px}
+.report-item-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
+.report-item-value{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:1px}
+.report-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.report-bar-label{font-size:12px;color:var(--muted);min-width:120px}
+.report-bar-track{flex:1;height:8px;background:#1e1e1e;border-radius:4px;overflow:hidden}
+.report-bar-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.report-bar-pct{font-size:12px;color:var(--text);min-width:36px;text-align:right}
+
 @media(max-width:700px){.grid{grid-template-columns:1fr}nav{padding:14px 20px}main{padding:24px 16px}}
 </style>
 </head>
@@ -152,10 +163,16 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
     <!-- Input form → POST /save → PerformanceController -->
     <div class="card">
       <div class="card-title">ADD PERFORMANCE</div>
+      <!-- Athlete selector — coaches pick which athlete's account to upload data to -->
+      <div class="field">
+        <label for="athleteInput">Athlete Account</label>
+        <input type="email" id="athleteInput" list="athleteList" placeholder="athlete@example.com" autocomplete="off">
+        <datalist id="athleteList"></datalist>
+      </div>
       <div class="field"><label id="lblDistance">Distance (m)</label><input type="number" id="distance" placeholder="e.g. 400" min="0"></div>
       <div class="field"><label id="lblTime">Time (sec)</label><input type="number" id="time" placeholder="e.g. 60" min="0"></div>
-      <div class="field"><label id="lblAccuracy">Accuracy (0–100)</label><input type="number" id="accuracy" placeholder="e.g. 85" min="0" max="100"></div>
-      <div class="field"><label id="lblStamina">Stamina (0–100)</label><input type="number" id="stamina" placeholder="e.g. 70" min="0" max="100"></div>
+      <div class="field" id="m1Field"><label id="lblM1">Sprint Form Score (0–100)</label><input type="number" id="m1" placeholder="e.g. 75" min="0" max="100"></div>
+      <div class="field" id="m2Field"><label id="lblM2">Metric 2 (0–100)</label><input type="number" id="m2" placeholder="e.g. 65" min="0" max="100"></div>
       <button class="btn-save" onclick="saveData()">SAVE SESSION</button>
       <div id="levelBadge"></div>
     </div>
@@ -174,12 +191,20 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       </div>
       <table>
         <thead>
-          <tr><th>#</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thAccuracy">Accuracy</th><th>Stamina</th><th>Score</th><th>Level</th><th></th></tr>
+          <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thM1">Metric 1</th><th id="thM2">Metric 2</th><th>Score</th><th>Level</th><th></th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
     </div>
 
+  </div>
+
+  <!-- Accuracy report — shown after each save -->
+  <div id="accuracyReport" style="display:none;margin-top:24px">
+    <div class="card full">
+      <div class="card-title">📊 ACCURACY REPORT</div>
+      <div id="reportContent"></div>
+    </div>
   </div>
 </main>
 

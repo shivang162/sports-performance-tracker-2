@@ -159,7 +159,7 @@ tbody tr:hover{background:rgba(255,255,255,.02)}
       <div class="card-title">MY SESSION HISTORY</div>
       <table>
         <thead>
-          <tr><th>#</th><th>Sport</th><th id="thDist">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thAcc">Accuracy</th><th>Stamina</th><th>Score</th><th>Level</th></tr>
+          <tr><th>#</th><th>Sport</th><th id="thDist">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th id="thAcc">Metric 1</th><th id="thM2">Metric 2</th><th>Score</th><th>Level</th></tr>
         </thead>
         <tbody id="tableBody"></tbody>
       </table>
@@ -181,13 +181,13 @@ var chartInst;
 
 // ── Sport config (labels) — mirrors script.js SPORT_CONFIG ─────
 var SPORT_CONFIG = {
-  "Running":       { dist: "Distance (m)",    speed: "Speed (m/s)",  acc: "Form" },
-  "Swimming":      { dist: "Distance (m)",    speed: "Speed (m/s)",  acc: "Technique" },
-  "Basketball":    { dist: "Shots Attempted", speed: "Pace",         acc: "Shot Acc." },
-  "Football":      { dist: "Distance (m)",    speed: "Speed (m/s)",  acc: "Pass Acc." },
-  "Tennis":        { dist: "Rallies",         speed: "Rally Pace",   acc: "Shot Acc." },
-  "Cycling":       { dist: "Distance (km)",   speed: "Speed (m/s)",  acc: "Form" },
-  "Weightlifting": { dist: "Weight (kg)",     speed: "Lift Rate",    acc: "Form Score" }
+  "Running":       { dist: "Distance (m)",       speed: "Speed (m/s)",  m1: "Sprint Form",       showM2: false, m2: "" },
+  "Swimming":      { dist: "Distance (m)",       speed: "Speed (m/s)",  m1: "Stroke Efficiency", showM2: false, m2: "" },
+  "Basketball":    { dist: "Shots Attempted",    speed: "Shot Rate",    m1: "Shoot. Eff.",        showM2: true,  m2: "Defense" },
+  "Football":      { dist: "Distance (m)",       speed: "Speed (m/s)",  m1: "Pass Comp. %",      showM2: true,  m2: "Fitness" },
+  "Tennis":        { dist: "Rallies",            speed: "Rally Pace",   m1: "First Serve %",     showM2: true,  m2: "Footwork" },
+  "Cycling":       { dist: "Distance (km)",      speed: "Speed (km/s)", m1: "Cadence Score",     showM2: false, m2: "" },
+  "Weightlifting": { dist: "Weight (kg)",        speed: "Load (kg/rep)",m1: "Technique",          showM2: false, m2: "" }
 };
 
 function getSport(){
@@ -200,7 +200,9 @@ function onSportChange(){
   var el;
   el = document.getElementById("thDist");  if(el) el.textContent = cfg.dist.split(" ")[0];
   el = document.getElementById("thSpeed"); if(el) el.textContent = cfg.speed;
-  el = document.getElementById("thAcc");   if(el) el.textContent = cfg.acc;
+  el = document.getElementById("thAcc");   if(el) el.textContent = cfg.m1;
+  el = document.getElementById("thM2");
+  if(el){ el.textContent = cfg.showM2 ? cfg.m2 : ""; el.style.display = cfg.showM2 ? "" : "none"; }
   fetchDashboard();
   fetchRecords();
 }
@@ -282,14 +284,16 @@ function fetchRecords(){
 
     tbody.innerHTML = "";
     records.forEach(function(r, i){
+      var cfg_   = SPORT_CONFIG[r.sport] || SPORT_CONFIG["Running"];
       var level  = escapeHtml(r.level);
       var sport_ = escapeHtml(r.sport);
       var d      = parseFloat(r.distance);
       var t      = parseFloat(r.time);
       var speed  = parseFloat(r.speed);
-      var acc    = parseFloat(r.accuracy);
-      var sta    = parseFloat(r.stamina);
+      var m1     = parseFloat(r.accuracy);
+      var m2     = parseFloat(r.stamina);
       var score  = parseFloat(r.score);
+      var m2Cell = cfg_.showM2 ? "<td>"+m2+"</td>" : "<td></td>";
       tbody.innerHTML +=
         "<tr>"+
         "<td>"+(i+1)+"</td>"+
@@ -297,8 +301,8 @@ function fetchRecords(){
         "<td>"+d+"</td>"+
         "<td>"+t+" s</td>"+
         "<td>"+speed.toFixed(2)+"</td>"+
-        "<td>"+acc+"</td>"+
-        "<td>"+sta+"</td>"+
+        "<td>"+m1+"</td>"+
+        m2Cell +
         "<td>"+score.toFixed(1)+"</td>"+
         "<td><span class='level-badge "+levelClass(r.level)+"' style='font-size:11px;padding:3px 10px'>"+level+"</span></td>"+
         "</tr>";
@@ -306,17 +310,21 @@ function fetchRecords(){
 
     // Latest session detail
     var last = records[records.length - 1];
+    var lastCfg = SPORT_CONFIG[last.sport] || SPORT_CONFIG["Running"];
     var latestEl = document.getElementById("latestBox");
     if(latestEl){
       var lLvl = escapeHtml(last.level);
+      var m2Row = lastCfg.showM2
+        ? "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>"+escapeHtml(lastCfg.m2)+"</span><span>"+parseFloat(last.stamina)+"</span></div>"
+        : "";
       latestEl.innerHTML =
         "<div style='display:flex;flex-direction:column;gap:10px'>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>"+escapeHtml(last.sport)+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Score</span><span style='color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:24px'>"+parseFloat(last.score).toFixed(1)+"</span></div>"+
         "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge "+levelClass(last.level)+"' style='font-size:11px;padding:3px 10px'>"+lLvl+"</span></div>"+
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>"+parseFloat(last.speed).toFixed(2)+"</span></div>"+
-        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Accuracy</span><span>"+parseFloat(last.accuracy)+"</span></div>"+
-        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Stamina</span><span>"+parseFloat(last.stamina)+"</span></div>"+
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>"+escapeHtml(lastCfg.m1)+"</span><span>"+parseFloat(last.accuracy)+"</span></div>"+
+        m2Row +
         "</div>";
     }
   })
