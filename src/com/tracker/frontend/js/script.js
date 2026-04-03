@@ -249,20 +249,28 @@ function updateUI() {
     tbody.innerHTML = "";
 
     records.forEach(function (r, i) {
-        totalSpeed += r.speed;
-        if (r.speed > best) best = r.speed;
-        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + escapeHtml(r.level);
+        var sport  = escapeHtml(r.sport);
+        var d      = parseFloat(r.d);
+        var t      = parseFloat(r.t);
+        var speed  = parseFloat(r.speed);
+        var acc    = parseFloat(r.accuracy);
+        var sta    = parseFloat(r.stamina);
+        var score  = parseFloat(r.score);
+        var level  = escapeHtml(r.level);
+        totalSpeed += speed;
+        if (speed > best) best = speed;
+        var cls = r.level === "Needs Improvement" ? "level-Needs" : "level-" + level;
         tbody.innerHTML +=
             "<tr>" +
             "<td>" + (i + 1) + "</td>" +
-            "<td>" + escapeHtml(r.sport) + "</td>" +
-            "<td>" + r.d + "</td>" +
-            "<td>" + r.t + " s</td>" +
-            "<td>" + r.speed.toFixed(2) + "</td>" +
-            "<td>" + r.accuracy + "</td>" +
-            "<td>" + r.stamina + "</td>" +
-            "<td>" + r.score.toFixed(1) + "</td>" +
-            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + escapeHtml(r.level) + "</span></td>" +
+            "<td>" + sport + "</td>" +
+            "<td>" + d + "</td>" +
+            "<td>" + t + " s</td>" +
+            "<td>" + speed.toFixed(2) + "</td>" +
+            "<td>" + acc + "</td>" +
+            "<td>" + sta + "</td>" +
+            "<td>" + score.toFixed(1) + "</td>" +
+            "<td><span class='level-badge " + cls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></td>" +
             "<td><button class='del-btn' onclick='deleteRow(" + i + ")'>✕</button></td>" +
             "</tr>";
     });
