@@ -505,7 +505,7 @@ var PAGE_TITLES = {
 function showPage(name) {
   ["login","register","dashboard","athlete","compare"].forEach(function(p) {
     var el = document.getElementById("page-" + p);
-    if (el) el.style.display = (p === name) ? "" : "none";
+    if (el) el.style.display = (p === name) ? "block" : "none";
   });
   document.title = PAGE_TITLES[name] || "APEX Sports Tracker";
 }
