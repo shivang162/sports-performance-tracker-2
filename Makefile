@@ -1,4 +1,6 @@
-JAR     := lib/postgresql-42.7.4.jar
+SQLITE  := lib/sqlite-jdbc-3.45.3.0.jar
+SLF4J   := lib/slf4j-api-2.0.13.jar:lib/slf4j-nop-2.0.13.jar
+JAR     := $(SQLITE):$(SLF4J)
 SRC_DIR := src
 OUT_DIR := out
 

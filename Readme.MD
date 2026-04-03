@@ -4,16 +4,18 @@ A full-stack Java web application for tracking and analyzing athlete performance
 
 ## Tech Stack
 - **Backend**: Java (plain HTTP server — no frameworks)
-- **Database**: PostgreSQL via JDBC
+- **Database**: SQLite via JDBC (embedded — no external database server required)
 - **Frontend**: HTML + CSS + JavaScript + Chart.js
 
 ## Project Structure
 ```
 sports-performance-tracker/
 ├── database/
-│   └── schema.sql              ← Run this first in PostgreSQL
+│   └── Schema.sql              ← SQLite schema (auto-applied on first run)
 ├── lib/
-│   └── postgresql-42.7.4.jar   ← Download and place here
+│   ├── sqlite-jdbc-3.45.3.0.jar  ← SQLite JDBC driver
+│   ├── slf4j-api-2.0.13.jar      ← Required by sqlite-jdbc
+│   └── slf4j-nop-2.0.13.jar      ← SLF4J no-op logger
 ├── src/com/tracker/
 │   ├── Main.java               ← Entry point, starts HTTP server
 │   ├── controller/
@@ -31,7 +33,7 @@ sports-performance-tracker/
 │   │   ├── PerformanceLevel.java
 │   │   └── RecordFormatter.java      JSON builder
 │   ├── dao/
-│   │   ├── DBConnection.java         PostgreSQL connection factory
+│   │   ├── DBConnection.java         SQLite connection factory (auto-init schema)
 │   │   ├── UserDAO.java
 │   │   └── PerformanceDAO.java
 │   └── frontend/
@@ -56,51 +58,34 @@ sports-performance-tracker/
 
 ## How to Run
 
-### Step 1 — Setup PostgreSQL
-```bash
-# Create the database
-psql -U postgres -c "CREATE DATABASE sports_tracker;"
+No external database setup is required. The SQLite database file (`sports_tracker.db`)
+is created automatically when the server starts for the first time.
 
-# Load the schema and seed data
-psql -U postgres -d sports_tracker -f database/Schema.sql
-```
-
-### Step 2 — Add PostgreSQL JDBC Driver
-Download `postgresql-42.7.4.jar` from https://jdbc.postgresql.org/download/  
-Place it in the `lib/` folder.
-
-### Step 3 — Set environment variables
-```bash
-export DB_URL=jdbc:postgresql://localhost:5432/sports_tracker
-export DB_USER=postgres
-export DB_PASS=your_password
-```
-
-### Step 4 — Test DB connection
+### Step 1 — Test DB connection (optional)
 ```bash
 make test-db
 ```
-You should see: `Connected to Database ✅`
+You should see: `Connected to SQLite ✅`
 
-If `make` is not available, run manually:
-```bash
-javac -cp lib/postgresql-42.7.4.jar TestDB.java
-java  -cp .:lib/postgresql-42.7.4.jar TestDB
-```
-
-### Step 5 — Run the server
+### Step 2 — Run the server
 ```bash
 make run
 ```
-Or in VS Code, add the JAR to your Java build path and run `Main.java`.
+Or in VS Code, add the JARs in `lib/` to your Java build path and run `Main.java`.
 
-### Step 6 — Open in browser
+### Step 3 — Open in browser
 Open `src/com/tracker/frontend/login.html`
 
 **Demo login**: `coach@example.com` / `safePassword123`
 
+### Override the database file path (optional)
+```bash
+export DB_URL=jdbc:sqlite:/path/to/your/sports_tracker.db
+make run
+```
+
 ## Features
-- Login & Registration with PostgreSQL
+- Login & Registration with SQLite
 - Save performance sessions (distance, time, accuracy, stamina)
 - Auto-calculated speed and weighted score
 - Dashboard with trend analysis, avg score, and DB-powered stats

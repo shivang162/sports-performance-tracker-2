@@ -1,30 +1,32 @@
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 /**
- * Quick database connection test.
- * Run this BEFORE Main.java to confirm PostgreSQL is working.
+ * Quick SQLite connection test — no external database server required.
+ * Run this to confirm SQLite is working before starting Main.java.
  *
- * Set credentials via environment variables before running:
- *   export DB_URL=jdbc:postgresql://localhost:5432/sports_tracker
- *   export DB_USER=postgres
- *   export DB_PASS=your_password
+ * Override the database file path via environment variable (optional):
+ *   export DB_URL=jdbc:sqlite:/path/to/sports_tracker.db
  *
  * Compile & run:
- *   javac -cp lib/postgresql-*.jar TestDB.java
- *   java  -cp .:lib/postgresql-*.jar TestDB
+ *   javac -cp lib/sqlite-jdbc-*.jar TestDB.java
+ *   java  -cp .:lib/sqlite-jdbc-*.jar TestDB
  */
 public class TestDB {
 
     public static void main(String[] args) {
-        String url  = System.getenv("DB_URL")  != null ? System.getenv("DB_URL")  : "jdbc:postgresql://localhost:5432/sports_tracker";
-        String user = System.getenv("DB_USER") != null ? System.getenv("DB_USER") : "postgres";
-        String pass = System.getenv("DB_PASS") != null ? System.getenv("DB_PASS") : "";
+        String url = System.getenv("DB_URL") != null
+                ? System.getenv("DB_URL") : "jdbc:sqlite:sports_tracker.db";
         try {
-            Class.forName("org.postgresql.Driver");
-            Connection conn = DriverManager.getConnection(url, user, pass);
-            System.out.println("Connected to Database ✅");
-            System.out.println("Schema: " + conn.getSchema());
+            Class.forName("org.sqlite.JDBC");
+            Connection conn = DriverManager.getConnection(url);
+            System.out.println("Connected to SQLite ✅  (" + url + ")");
+            try (Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery("SELECT sqlite_version()")) {
+                if (rs.next()) System.out.println("SQLite version: " + rs.getString(1));
+            }
             conn.close();
         } catch (Exception e) {
             System.err.println("Connection FAILED ❌");

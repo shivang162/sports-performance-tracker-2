@@ -6,7 +6,7 @@ import com.tracker.service.AuthService;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-/** POST /login → AuthService → UserDAO → PostgreSQL */
+/** POST /login → AuthService → UserDAO → SQLite */
 public class AuthController implements HttpHandler {
 
     private final AuthService authService = new AuthService();

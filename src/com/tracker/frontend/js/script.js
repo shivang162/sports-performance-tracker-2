@@ -72,7 +72,7 @@ function initLoginPage() {
 }
 
 /**
- * POST /login → AuthController → AuthService → UserDAO → PostgreSQL
+ * POST /login → AuthController → AuthService → UserDAO → SQLite
  * On success: stores email in sessionStorage, redirects to dashboard.html
  */
 function login() {
@@ -184,7 +184,7 @@ function fetchDashboard() {
 
 /**
  * Sends: athlete, sport, distance, time, accuracy, stamina
- * Server: validates → speed = distance/time → calculateScore (sport weights) → level → PostgreSQL
+ * Server: validates → speed = distance/time → calculateScore (sport weights) → level → SQLite
  * Returns: {success, athlete, sport, speed, accuracy, stamina, score, level}
  * On offline: calculates score locally using sport weights, saves to localStorage
  */

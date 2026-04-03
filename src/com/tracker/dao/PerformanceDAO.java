@@ -5,7 +5,7 @@ import java.util.*;
 
 public class PerformanceDAO {
 
-    /** Insert a new session record into PostgreSQL */
+    /** Insert a new session record into SQLite */
     public boolean insertRecord(String athlete, String sport, double distance, double timeSec,
                                 double speed, double accuracy, double stamina,
                                 double score, String level) {

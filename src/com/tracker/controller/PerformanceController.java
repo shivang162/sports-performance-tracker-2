@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets;
 /**
  * POST /save
  * Reads sport/distance/time/accuracy/stamina/athlete → validates → calculates
- * speed+score+level (sport-specific weights) → saves to PostgreSQL → returns JSON
+ * speed+score+level (sport-specific weights) → saves to SQLite → returns JSON
  */
 public class PerformanceController implements HttpHandler {
 
