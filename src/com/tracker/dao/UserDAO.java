@@ -103,4 +103,20 @@ public class UserDAO {
             }
         } catch (SQLException e) { return false; }
     }
+
+    /** Returns the role of the given user, or "athlete" if not found. */
+    public String getUserRole(String email) {
+        if (email == null) return "athlete";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(
+                 "SELECT role FROM users WHERE email=? LIMIT 1")) {
+            ps.setString(1, email.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("role");
+            }
+        } catch (SQLException e) {
+            System.err.println("[UserDAO] getUserRole: " + e.getMessage());
+        }
+        return "athlete";
+    }
 }

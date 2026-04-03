@@ -97,7 +97,9 @@ function login() {
         if (!data.success) throw new Error(data.error || "Invalid credentials");
         showSuc(data.message || "Login Successful");
         sessionStorage.setItem("userEmail", email);
-        setTimeout(function () { window.location.href = "dashboard.html"; }, 800);
+        sessionStorage.setItem("userRole",  data.role || "athlete");
+        var dest = (data.role === "coach") ? "dashboard.html" : "athlete.html";
+        setTimeout(function () { window.location.href = dest; }, 800);
     })
     .catch(function (err) {
         showErr(err.message || "Server not reachable. Is Java running on port 8080?");
@@ -117,10 +119,18 @@ function guestLogin() {
 // ═══════════════════════════════════════════════════════════════
 
 function initDashboard() {
+    // Redirect athletes away from the coach dashboard
+    var role = sessionStorage.getItem("userRole") || "guest";
+    if (role !== "coach" && role !== "guest") {
+        window.location.href = "athlete.html"; return;
+    }
+
     // Show logged-in user in navbar
     var email = sessionStorage.getItem("userEmail") || "coach@example.com";
     var badge = document.getElementById("userBadge");
     if (badge) badge.textContent = email;
+    var roleBadge = document.getElementById("roleBadge");
+    if (roleBadge) roleBadge.textContent = role === "coach" ? "Coach" : "Guest";
 
     // Apply initial sport labels
     onSportChange();

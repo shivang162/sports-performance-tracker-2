@@ -10,8 +10,9 @@ import java.util.List;
 
 /**
  * GET /records
- * Returns all performance records with athlete name as a JSON array.
- * Used by compare.html to filter records per athlete.
+ * GET /records?athlete=email   (athlete-scoped view — returns only that athlete's records)
+ * Returns performance records as a JSON array.
+ * Used by compare.html (no filter) and athlete.html (athlete filter).
  */
 public class RecordsController implements HttpHandler {
 
@@ -24,7 +25,10 @@ public class RecordsController implements HttpHandler {
         if (ex.getRequestMethod().equalsIgnoreCase("OPTIONS")) { send(ex,204,""); return; }
         if (!ex.getRequestMethod().equalsIgnoreCase("GET"))    { send(ex,405,"{\"error\":\"Method not allowed\"}"); return; }
         try {
-            List<Object[]> records = dao.getAllRecordsWithAthlete();
+            String athleteFilter = queryParam(ex.getRequestURI().getRawQuery(), "athlete");
+            List<Object[]> records = (athleteFilter != null && !athleteFilter.isBlank())
+                ? dao.getRecordsByAthlete(athleteFilter)
+                : dao.getAllRecordsWithAthlete();
             StringBuilder json = new StringBuilder("[");
             for (int i=0; i<records.size(); i++) {
                 Object[] r = records.get(i);
@@ -43,6 +47,19 @@ public class RecordsController implements HttpHandler {
             System.err.println("[RecordsController] "+e.getMessage());
             send(ex,500,"{\"error\":\"Could not load records\"}");
         }
+    }
+
+    private String queryParam(String rawQuery, String name) {
+        if (rawQuery == null) return null;
+        for (String pair : rawQuery.split("&")) {
+            int eq = pair.indexOf('=');
+            if (eq == -1) continue;
+            try {
+                String k = java.net.URLDecoder.decode(pair.substring(0, eq), StandardCharsets.UTF_8);
+                if (k.equals(name)) return java.net.URLDecoder.decode(pair.substring(eq + 1), StandardCharsets.UTF_8);
+            } catch (Exception ignored) {}
+        }
+        return null;
     }
 
     private void send(HttpExchange ex, int code, String body) {

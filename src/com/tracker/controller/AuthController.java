@@ -6,10 +6,11 @@ import com.tracker.service.AuthService;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
-/** POST /login → AuthService → UserDAO → MySQL */
+/** POST /login → AuthService → UserDAO → PostgreSQL */
 public class AuthController implements HttpHandler {
 
     private final AuthService authService = new AuthService();
+    private final com.tracker.dao.UserDAO userDAO = new com.tracker.dao.UserDAO();
 
     @Override
     public void handle(HttpExchange ex) {
@@ -21,7 +22,8 @@ public class AuthController implements HttpHandler {
             String body  = new String(ex.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
             String email = json(body,"email"), pass = json(body,"password");
             if (authService.login(email, pass)) {
-                send(ex, 200, "{\"success\":true,\"message\":\"Login Successful\"}");
+                String role = userDAO.getUserRole(email);
+                send(ex, 200, "{\"success\":true,\"message\":\"Login Successful\",\"role\":\"" + role + "\"}");
             } else {
                 send(ex, 401, "{\"success\":false,\"error\":\"Invalid email or password\"}");
             }

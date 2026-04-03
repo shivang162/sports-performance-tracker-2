@@ -111,6 +111,14 @@ main{max-width:1000px;margin:0 auto;padding:40px 24px}
 const BASE = "http://localhost:8080";
 let cmpChart;
 
+// Role guard — athletes cannot access the compare page
+(function(){
+  var role = sessionStorage.getItem("userRole") || "guest";
+  if (role !== "coach" && role !== "guest") {
+    window.location.href = "athlete.html";
+  }
+})();
+
 function showErr(m){var e=document.getElementById("errBox");e.textContent=m;e.classList.add("show")}
 function hideErr(){document.getElementById("errBox").classList.remove("show")}
 
