@@ -3,267 +3,357 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>APEX PRO — Elite Athlete Performance</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>PULSE — Sports Performance Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-/* ── Reset & Variables ──────────────────────────────────────── */
+/* ── Reset & Design Tokens ──────────────────────────────────── */
 *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --red:#E83A2F;--rd:#C42E25;--black:#07070f;--card:#0d0d1a;
-  --border:#1a1a2e;--text:#F0EDE8;--muted:#505068;--accent:#F5C518;
-  --green:#4ade80;--blue:#60a5fa;--gold:#FFB800;
-  --glow-red:rgba(232,58,47,.3);
-  --premium-gradient:linear-gradient(135deg,#E83A2F 0%,#FF6B35 100%)
+  --bg:#060d1b;--surface:#0c1426;--card:#111c33;--card2:#0f1930;
+  --border:#1e2d4a;--border2:#243552;
+  --text:#e8f0fe;--muted:#4a6080;--muted2:#6480a0;
+  --cyan:#06b6d4;--teal:#0ea5e9;--emerald:#10b981;
+  --amber:#f59e0b;--violet:#8b5cf6;--rose:#f43f5e;
+  --cyan-glow:rgba(6,182,212,.25);--teal-glow:rgba(14,165,233,.2);
+  --emerald-glow:rgba(16,185,129,.2);
+  --primary-gradient:linear-gradient(135deg,#06b6d4 0%,#3b82f6 100%);
+  --success-gradient:linear-gradient(135deg,#10b981 0%,#059669 100%);
+  --danger-gradient:linear-gradient(135deg,#f43f5e 0%,#e11d48 100%);
+  --amber-gradient:linear-gradient(135deg,#f59e0b 0%,#d97706 100%);
+  --accent:#06b6d4;--green:#10b981;--blue:#3b82f6;--red:#f43f5e;
+  --gold:#f59e0b
 }
-body{font-family:'DM Sans',sans-serif;background:var(--black);color:var(--text);min-height:100vh;
-  background-image:radial-gradient(ellipse at 15% 0%,rgba(232,58,47,.06) 0%,transparent 55%),
-    radial-gradient(ellipse at 85% 100%,rgba(96,165,250,.04) 0%,transparent 55%)}
+body{font-family:'Outfit',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 10% -10%,rgba(6,182,212,.07) 0%,transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 110%,rgba(59,130,246,.06) 0%,transparent 60%),
+    radial-gradient(ellipse 40% 30% at 50% 50%,rgba(139,92,246,.03) 0%,transparent 70%)}
 
 /* ── SPA page switching ─────────────────────────────────────── */
 .spa-page{display:none}
 
-/* ── Keyframe Animations ────────────────────────────────────── */
-@keyframes fadeInUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scaleIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
-@keyframes countPop{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
-@keyframes floatOrb{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(24px,-36px) scale(1.08)}66%{transform:translate(-18px,16px) scale(.93)}}
-@keyframes bgGrid{0%{transform:translate(0,0)}100%{transform:translate(64px,64px)}}
-@keyframes bgPulse{0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.7}50%{transform:translate(-50%,-50%) scale(1.18);opacity:.35}}
-@keyframes up{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
-@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-@keyframes borderGlow{0%,100%{opacity:.35}50%{opacity:1}}
+/* ── Keyframes ──────────────────────────────────────────────── */
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+@keyframes countPop{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes floatOrb{0%,100%{transform:translate(0,0)}33%{transform:translate(30px,-40px)}66%{transform:translate(-20px,20px)}}
+@keyframes pulse{0%,100%{opacity:.6;transform:scale(1)}50%{opacity:.25;transform:scale(1.15)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+@keyframes shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes glow{0%,100%{box-shadow:0 0 20px rgba(6,182,212,.2)}50%{box-shadow:0 0 40px rgba(6,182,212,.5)}}
 
-/* ── Shared Nav ─────────────────────────────────────────────── */
-nav{display:flex;align-items:center;justify-content:space-between;padding:16px 40px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(7,7,15,.93);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);z-index:100;isolation:isolate}
-nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(232,58,47,.5) 35%,rgba(245,197,24,.3) 65%,transparent 100%);pointer-events:none;animation:borderGlow 3.5s ease-in-out infinite}
-.nav-logo{display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:default;user-select:none}
-.nav-logo-icon{width:34px;height:34px;background:var(--premium-gradient);border-radius:9px;display:grid;place-items:center;font-size:16px;box-shadow:0 0 18px rgba(232,58,47,.4),inset 0 0 6px rgba(255,255,255,.08);flex-shrink:0}
-.pro-badge{display:inline-flex;align-items:center;background:linear-gradient(135deg,#FFB800,#FF8C00);color:#000;font-size:9px;font-weight:800;padding:2px 7px;border-radius:5px;letter-spacing:.8px;margin-left:2px;line-height:1.5;vertical-align:middle;text-transform:uppercase;flex-shrink:0}
-.nav-right{display:flex;align-items:center;gap:14px}
-.nav-links{display:flex;gap:16px}
-.nav-links a{color:var(--muted);text-decoration:none;font-size:13px;transition:color .2s;cursor:pointer}
-.nav-links a:hover,.nav-links a.active{color:var(--text)}
-.nav-link{font-size:13px;color:var(--muted);text-decoration:none;cursor:pointer;transition:color .2s;background:none;border:none;font-family:'DM Sans',sans-serif}
-.nav-link:hover{color:var(--text)}
-.badge{font-size:12px;color:var(--muted);background:var(--card);border:1px solid var(--border);padding:4px 12px;border-radius:20px}
-.badge.athlete{background:rgba(96,165,250,.1);color:var(--blue);border-color:rgba(96,165,250,.25)}
-.btn-nav{background:transparent;border:1px solid var(--border);color:var(--muted);padding:6px 16px;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .25s,color .25s,background .25s}
-.btn-nav:hover{border-color:rgba(232,58,47,.5);color:var(--red);background:rgba(232,58,47,.05)}
+/* ── Navigation ─────────────────────────────────────────────── */
+nav{display:flex;align-items:center;justify-content:space-between;padding:0 36px;height:64px;
+  border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;
+  background:rgba(6,13,27,.85);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+nav::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.3;pointer-events:none}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:default;user-select:none}
+.nav-logo-icon{width:36px;height:36px;background:var(--primary-gradient);border-radius:10px;
+  display:grid;place-items:center;font-size:17px;
+  box-shadow:0 0 20px rgba(6,182,212,.35),inset 0 1px 0 rgba(255,255,255,.15);flex-shrink:0}
+.nav-logo-text{font-weight:800;font-size:18px;letter-spacing:.5px;
+  background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.pro-badge{display:inline-flex;align-items:center;background:var(--amber-gradient);color:#000;
+  font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;letter-spacing:.6px;
+  margin-left:4px;text-transform:uppercase;flex-shrink:0;vertical-align:middle}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-links{display:flex;gap:4px}
+.nav-links a{color:var(--muted2);text-decoration:none;font-size:13px;font-weight:500;
+  padding:6px 12px;border-radius:8px;transition:all .2s;cursor:pointer}
+.nav-links a:hover,.nav-links a.active{color:var(--text);background:rgba(255,255,255,.06)}
+.nav-link{font-size:13px;font-weight:500;color:var(--muted2);text-decoration:none;cursor:pointer;
+  padding:6px 12px;border-radius:8px;transition:all .2s;background:none;border:none;font-family:'Outfit',sans-serif}
+.nav-link:hover{color:var(--text);background:rgba(255,255,255,.06)}
+.badge{font-size:11px;font-weight:600;color:var(--muted2);background:var(--card);
+  border:1px solid var(--border);padding:4px 12px;border-radius:20px;letter-spacing:.3px}
+.badge.athlete{background:rgba(6,182,212,.08);color:var(--cyan);border-color:rgba(6,182,212,.25)}
+.btn-nav{background:transparent;border:1px solid var(--border2);color:var(--muted2);padding:6px 16px;
+  border-radius:8px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .2s}
+.btn-nav:hover{border-color:rgba(6,182,212,.4);color:var(--cyan);background:rgba(6,182,212,.06)}
 
 /* ── Shared Layouts ─────────────────────────────────────────── */
-main{max-width:1100px;margin:0 auto;padding:40px 24px}
-.page-title{font-family:'Bebas Neue',sans-serif;font-size:42px;letter-spacing:2px;margin-bottom:6px;background:linear-gradient(120deg,var(--text) 55%,var(--muted) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.page-sub{font-size:14px;color:var(--muted);margin-bottom:28px}
+main{max-width:1140px;margin:0 auto;padding:40px 28px}
+.page-header{margin-bottom:32px}
+.page-title{font-size:30px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;
+  background:linear-gradient(120deg,var(--text) 40%,var(--muted2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.page-sub{font-size:14px;color:var(--muted2);font-weight:400}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
-.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 10%,rgba(232,58,47,.2) 40%,rgba(245,197,24,.15) 60%,transparent 90%);pointer-events:none}
-.card:hover{transform:translateY(-3px);box-shadow:0 20px 56px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.03);border-color:#22223a}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px;
+  position:relative;overflow:hidden;transition:all .3s ease}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(6,182,212,.3),rgba(59,130,246,.2),transparent);pointer-events:none}
+.card:hover{transform:translateY(-2px);box-shadow:0 24px 64px rgba(0,0,0,.4),0 0 0 1px rgba(6,182,212,.08)}
 .card.full{grid-column:1/-1}
-.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:1.5px;margin-bottom:20px}
+.card-title{font-size:15px;font-weight:700;letter-spacing:.3px;margin-bottom:20px;
+  display:flex;align-items:center;gap:8px;color:var(--muted2);text-transform:uppercase;font-size:11px;letter-spacing:1px}
+.card-title-lg{font-size:17px;font-weight:700;margin-bottom:20px;color:var(--text)}
+
+/* ── Glass panel ────────────────────────────────────────────── */
+.glass{background:rgba(6,182,212,.03);border:1px solid rgba(6,182,212,.12);border-radius:16px;
+  backdrop-filter:blur(8px)}
 
 /* ── Form elements ──────────────────────────────────────────── */
 .field{margin-bottom:14px}
-.field label{display:block;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;transition:color .2s}
-.field:focus-within label{color:var(--red)}
-.field input,.field select{width:100%;background:#0a0a16;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .25s,box-shadow .25s,background .25s;-webkit-appearance:none;appearance:none}
-.field input::placeholder{color:#252535}
-.field input:focus,.field select:focus{border-color:var(--red);box-shadow:0 0 0 3px rgba(232,58,47,.1);background:#0e0e1e}
-.field select{cursor:pointer}
-.btn-save{width:100%;margin-top:6px;background:var(--premium-gradient);color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;cursor:pointer;transition:opacity .2s,transform .15s,box-shadow .25s;box-shadow:0 4px 22px rgba(232,58,47,.3)}
-.btn-save:hover{opacity:.9;box-shadow:0 6px 30px rgba(232,58,47,.45)}
+.field label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+  color:var(--muted2);margin-bottom:7px;transition:color .2s}
+.field:focus-within label{color:var(--cyan)}
+.field input,.field select{width:100%;background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:12px;padding:11px 14px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:400;
+  color:var(--text);outline:none;transition:all .25s;-webkit-appearance:none;appearance:none}
+.field input::placeholder{color:var(--muted);opacity:.6}
+.field input:focus,.field select:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(6,182,212,.12);
+  background:rgba(6,182,212,.04)}
+.field select{cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6080' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 14px center}
+.btn-save{width:100%;margin-top:8px;background:var(--primary-gradient);color:#fff;border:none;
+  border-radius:12px;padding:13px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;
+  letter-spacing:.3px;cursor:pointer;transition:all .25s;box-shadow:0 4px 20px rgba(6,182,212,.3)}
+.btn-save:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(6,182,212,.45)}
 .btn-save:active{transform:scale(.98)}
 
 /* ── Suggestions ────────────────────────────────────────────── */
-.suggestion{background:rgba(245,197,24,.06);border:1px solid rgba(245,197,24,.18);border-radius:14px;padding:16px 20px;margin-bottom:28px;display:none;align-items:flex-start;gap:12px;animation:fadeInUp .4s ease both}
+.suggestion{background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.2);border-radius:14px;
+  padding:16px 20px;margin-bottom:24px;display:none;align-items:flex-start;gap:12px;
+  animation:fadeInUp .4s ease both}
 .suggestion.show{display:flex}
-.suggestion-icon{font-size:20px;flex-shrink:0;margin-top:1px}
-.suggestion-text{font-size:14px;color:var(--accent);line-height:1.65}
+.suggestion-icon{font-size:18px;flex-shrink:0;margin-top:2px}
+.suggestion-text{font-size:14px;color:var(--amber);line-height:1.6;font-weight:400}
 
 /* ── Stat cards ─────────────────────────────────────────────── */
-.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:32px}
-.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:20px 22px;position:relative;overflow:hidden;transition:transform .25s ease,box-shadow .25s ease;cursor:default}
-.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--red),var(--accent),var(--blue),var(--green));transform:scaleX(0);transform-origin:left;transition:transform .45s cubic-bezier(.16,1,.3,1)}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;margin-bottom:28px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 24px;
+  position:relative;overflow:hidden;transition:all .3s;cursor:default}
+.stat-card::after{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--cyan),var(--blue),var(--violet),var(--emerald));
+  transform:scaleX(0);transform-origin:left;transition:transform .5s cubic-bezier(.16,1,.3,1)}
 .stat-card:hover::after{transform:scaleX(1)}
-.stat-card:hover{transform:translateY(-5px);box-shadow:0 16px 48px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.03)}
-.stat-card-icon{font-size:22px;margin-bottom:10px;display:block;opacity:.85}
-.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:8px}
-.stat-value{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:1px;transition:color .35s}
-.stat-value.yellow{color:var(--accent)}
-.stat-value.green{color:var(--green)}
-.stat-value.red{color:var(--red)}
-.stat-value.blue{color:var(--blue)}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.35),0 0 0 1px rgba(6,182,212,.1)}
+.stat-card-icon{font-size:24px;margin-bottom:12px;display:block;line-height:1}
+.stat-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:6px}
+.stat-value{font-size:32px;font-weight:800;letter-spacing:-.5px;transition:color .3s;line-height:1}
+.stat-value.yellow{color:var(--amber)}
+.stat-value.green{color:var(--emerald)}
+.stat-value.red{color:var(--rose)}
+.stat-value.blue{color:var(--cyan)}
 .count-pop{animation:countPop .4s ease}
 
 /* ── Level badges ───────────────────────────────────────────── */
-.level-badge{display:inline-block;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:500;margin-top:4px;transition:box-shadow .25s}
-.level-Excellent{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.28)}
-.level-Excellent:hover{box-shadow:0 0 18px rgba(74,222,128,.22)}
-.level-Good{background:rgba(245,197,24,.1);color:var(--accent);border:1px solid rgba(245,197,24,.28)}
-.level-Good:hover{box-shadow:0 0 18px rgba(245,197,24,.22)}
-.level-Average{background:rgba(232,58,47,.1);color:#fca5a5;border:1px solid rgba(232,58,47,.28)}
-.level-Needs{background:rgba(140,140,150,.07);color:var(--muted);border:1px solid var(--border)}
+.level-badge{display:inline-block;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;
+  margin-top:4px;transition:all .25s;letter-spacing:.2px}
+.level-Excellent{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.3)}
+.level-Excellent:hover{box-shadow:0 0 16px rgba(16,185,129,.2)}
+.level-Good{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.3)}
+.level-Good:hover{box-shadow:0 0 16px rgba(245,158,11,.2)}
+.level-Average{background:rgba(14,165,233,.1);color:var(--teal);border:1px solid rgba(14,165,233,.3)}
+.level-Needs{background:rgba(74,96,128,.08);color:var(--muted2);border:1px solid var(--border)}
 
 /* ── Tables ─────────────────────────────────────────────────── */
 table{width:100%;border-collapse:collapse}
-thead th{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:8px 12px;text-align:left;border-bottom:1px solid var(--border)}
-tbody td{padding:12px;font-size:14px;border-bottom:1px solid #0e0e1c;transition:background .2s}
+thead th{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;
+  color:var(--muted2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
+tbody td{padding:13px 14px;font-size:14px;border-bottom:1px solid rgba(30,45,74,.6);transition:background .2s}
 tbody tr:last-child td{border-bottom:none}
-tbody tr:hover td{background:rgba(232,58,47,.03)}
-.del-btn{background:transparent;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:12px;transition:border-color .2s,color .2s,background .2s}
-.del-btn:hover{border-color:rgba(232,58,47,.5);color:var(--red);background:rgba(232,58,47,.07)}
-.empty-row td{text-align:center;color:var(--muted);padding:36px;font-size:13px}
+tbody tr:hover td{background:rgba(6,182,212,.03)}
+.del-btn{background:transparent;border:1px solid var(--border);color:var(--muted2);width:28px;height:28px;
+  border-radius:8px;cursor:pointer;font-size:12px;transition:all .2s;display:inline-grid;place-items:center}
+.del-btn:hover{border-color:rgba(244,63,94,.4);color:var(--rose);background:rgba(244,63,94,.07)}
+.empty-row td{text-align:center;color:var(--muted);padding:40px;font-size:13px;font-weight:400}
 
 /* ── Toast ──────────────────────────────────────────────────── */
-.toast{position:fixed;bottom:28px;right:28px;background:rgba(13,13,26,.96);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:13px;color:var(--text);transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);z-index:999;backdrop-filter:blur(12px);max-width:320px}
+.toast{position:fixed;bottom:28px;right:28px;background:var(--card2);border:1px solid var(--border2);
+  border-radius:14px;padding:14px 20px;font-size:13px;font-weight:500;color:var(--text);
+  transform:translateY(80px);opacity:0;transition:all .35s cubic-bezier(.16,1,.3,1);
+  z-index:999;backdrop-filter:blur(16px);max-width:340px;
+  box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .toast.show{transform:translateY(0);opacity:1}
-.toast.green{border-color:rgba(74,222,128,.35);color:var(--green)}
-.toast.red{border-color:rgba(232,58,47,.35);color:#f87171}
+.toast.green{border-color:rgba(16,185,129,.4);color:var(--emerald)}
+.toast.red{border-color:rgba(244,63,94,.4);color:var(--rose)}
 
-/* ── Info box (athlete) ─────────────────────────────────────── */
-.info-box{background:rgba(96,165,250,.05);border:1px solid rgba(96,165,250,.16);border-radius:12px;padding:12px 18px;margin-bottom:24px;font-size:13px;color:var(--blue);display:flex;align-items:center;gap:10px}
+/* ── Info box ───────────────────────────────────────────────── */
+.info-box{background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.18);border-radius:12px;
+  padding:12px 18px;margin-bottom:24px;font-size:13px;color:var(--cyan);display:flex;align-items:center;gap:10px}
 
 /* ── Accuracy report ────────────────────────────────────────── */
 .report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:20px}
-.report-item{background:#080812;border:1px solid var(--border);border-radius:12px;padding:16px;transition:transform .2s}
+.report-item{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;padding:18px;transition:transform .2s}
 .report-item:hover{transform:translateY(-2px)}
-.report-item-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px}
-.report-item-value{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:1px}
+.report-item-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:8px}
+.report-item-value{font-size:28px;font-weight:800;letter-spacing:-.3px}
 .report-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
-.report-bar-label{font-size:12px;color:var(--muted);min-width:120px}
-.report-bar-track{flex:1;height:8px;background:#080812;border-radius:4px;overflow:hidden;min-width:60px}
-.report-bar-fill{height:100%;border-radius:4px;transition:width .85s cubic-bezier(.16,1,.3,1)}
-.report-bar-pct{font-size:12px;color:var(--text);min-width:36px;text-align:right}
+.report-bar-label{font-size:12px;color:var(--muted2);min-width:130px;font-weight:500}
+.report-bar-track{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;min-width:60px}
+.report-bar-fill{height:100%;border-radius:3px;transition:width .85s cubic-bezier(.16,1,.3,1)}
+.report-bar-pct{font-size:12px;color:var(--text);min-width:36px;text-align:right;font-weight:600}
 
 /* ── Compare page ───────────────────────────────────────────── */
 .input-row{display:grid;grid-template-columns:1fr 1fr auto;gap:16px;margin-bottom:32px;align-items:end}
-.btn-compare{background:var(--premium-gradient);color:#fff;border:none;border-radius:10px;padding:12px 28px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;cursor:pointer;transition:opacity .2s,box-shadow .25s;box-shadow:0 4px 20px rgba(232,58,47,.3);white-space:nowrap}
-.btn-compare:hover{opacity:.9;box-shadow:0 6px 30px rgba(232,58,47,.45)}
-.btn-compare:disabled{opacity:.45;cursor:not-allowed;box-shadow:none}
-.err-box{background:rgba(232,58,47,.07);border:1px solid rgba(232,58,47,.22);border-radius:10px;padding:10px 14px;font-size:13px;color:#f87171;margin-bottom:16px;display:none}
+.btn-compare{background:var(--primary-gradient);color:#fff;border:none;border-radius:12px;padding:11px 28px;
+  font-family:'Outfit',sans-serif;font-size:14px;font-weight:700;cursor:pointer;
+  transition:all .25s;box-shadow:0 4px 20px rgba(6,182,212,.3);white-space:nowrap}
+.btn-compare:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(6,182,212,.45)}
+.btn-compare:disabled{opacity:.4;cursor:not-allowed;box-shadow:none;transform:none}
+.err-box{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.25);border-radius:12px;
+  padding:12px 16px;font-size:13px;color:var(--rose);margin-bottom:16px;display:none;font-weight:500}
 .err-box.show{display:block;animation:fadeInUp .3s ease}
-.cmp-banner{background:linear-gradient(135deg,rgba(245,197,24,.07),rgba(232,58,47,.06));border:1px solid rgba(245,197,24,.22);border-radius:14px;padding:20px 28px;margin-bottom:24px;font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1.5px;color:var(--accent);text-align:center;display:none;animation:scaleIn .4s ease}
+.cmp-banner{background:linear-gradient(135deg,rgba(6,182,212,.07),rgba(59,130,246,.06));
+  border:1px solid rgba(6,182,212,.2);border-radius:16px;padding:20px 28px;margin-bottom:24px;
+  font-size:20px;font-weight:800;color:var(--cyan);text-align:center;display:none;animation:scaleIn .4s ease;letter-spacing:.2px}
 .result-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;display:none}
-.athlete-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;transition:transform .25s,box-shadow .25s}
-.athlete-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.4)}
-.athlete-card.winner{border-color:rgba(245,197,24,.35);box-shadow:0 0 32px rgba(245,197,24,.12)}
-.athlete-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;margin-bottom:16px}
-.stat-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #0e0e1c;font-size:14px}
+.athlete-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;
+  transition:all .25s}
+.athlete-card:hover{transform:translateY(-2px);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+.athlete-card.winner{border-color:rgba(6,182,212,.3);box-shadow:0 0 32px rgba(6,182,212,.1)}
+.athlete-name{font-size:20px;font-weight:800;letter-spacing:-.2px;margin-bottom:18px;color:var(--text)}
+.stat-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid rgba(30,45,74,.5);font-size:14px}
 .stat-row:last-child{border-bottom:none}
-.stat-l{color:var(--muted)}
-.chart-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:24px;display:none;animation:fadeInUp .4s ease}
-.chart-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;margin-bottom:16px}
+.stat-l{color:var(--muted2);font-weight:500}
+.chart-card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:24px;
+  display:none;animation:fadeInUp .4s ease}
+.chart-title{font-size:15px;font-weight:700;margin-bottom:16px;color:var(--text)}
 
-/* ── Login / Register background ───────────────────────────── */
+/* ── Auth pages background ──────────────────────────────────── */
 .login-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
-.login-bg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(232,58,47,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(232,58,47,.03) 1px,transparent 1px);background-size:64px 64px;animation:bgGrid 28s linear infinite}
-.login-bg::after{content:'';position:absolute;width:750px;height:750px;background:radial-gradient(circle,rgba(232,58,47,.09) 0%,transparent 65%);top:50%;left:50%;transform:translate(-50%,-50%);animation:bgPulse 5s ease-in-out infinite}
-.orb{position:absolute;border-radius:50%;filter:blur(80px);animation:floatOrb 14s ease-in-out infinite;pointer-events:none}
-.orb-1{width:500px;height:500px;background:rgba(232,58,47,.06);top:-150px;left:-150px;animation-delay:0s}
-.orb-2{width:350px;height:350px;background:rgba(245,197,24,.04);bottom:-100px;right:-100px;animation-delay:-5s}
-.orb-3{width:250px;height:250px;background:rgba(96,165,250,.05);top:35%;right:5%;animation-delay:-9s}
+.login-bg::before{content:'';position:absolute;inset:0;
+  background-image:linear-gradient(rgba(6,182,212,.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(6,182,212,.025) 1px,transparent 1px);
+  background-size:60px 60px}
+.login-bg::after{content:'';position:absolute;width:800px;height:800px;
+  background:radial-gradient(circle,rgba(6,182,212,.07) 0%,transparent 65%);
+  top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse 6s ease-in-out infinite}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);animation:floatOrb 16s ease-in-out infinite;pointer-events:none}
+.orb-1{width:500px;height:500px;background:rgba(6,182,212,.05);top:-180px;left:-100px;animation-delay:0s}
+.orb-2{width:380px;height:380px;background:rgba(59,130,246,.04);bottom:-120px;right:-80px;animation-delay:-6s}
+.orb-3{width:280px;height:280px;background:rgba(139,92,246,.04);top:30%;right:8%;animation-delay:-11s}
 
-/* ── Login page layout ──────────────────────────────────────── */
+/* ── Login page ─────────────────────────────────────────────── */
 .login-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
-.login-inner{display:grid;grid-template-columns:1fr 1px 420px;max-width:900px;width:100%;animation:up .8s cubic-bezier(.16,1,.3,1) both}
-.brand{padding:60px 50px 60px 0;display:flex;flex-direction:column;justify-content:space-between}
-.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:40px}
-.logo-icon{width:46px;height:46px;background:var(--premium-gradient);border-radius:12px;display:grid;place-items:center;font-size:22px;box-shadow:0 0 28px rgba(232,58,47,.4),inset 0 0 6px rgba(255,255,255,.08)}
-.logo-text{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:2px}
-.headline{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,6vw,80px);line-height:.92;letter-spacing:2px;margin-bottom:24px}
-.headline span{color:var(--red);display:block;text-shadow:0 0 40px rgba(232,58,47,.25)}
-.brand-sub{font-size:14px;color:var(--muted);line-height:1.7;max-width:290px;margin-bottom:48px}
-.brand-stats{display:flex;gap:32px}
-.stat-n{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accent);letter-spacing:1px}
-.stat-l-sm{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-.vdiv{background:linear-gradient(to bottom,transparent,var(--border),transparent);width:1px}
-.login-form{padding:60px 0 60px 50px}
-.form-title{font-family:'Bebas Neue',sans-serif;font-size:34px;letter-spacing:2px;margin-bottom:6px}
-.form-sub{font-size:13px;color:var(--muted);margin-bottom:40px}
-.field.lf{margin-bottom:20px;position:relative}
-.field.lf input{background:#0b0b18;padding:15px 16px;border-radius:10px}
-.field-icon{position:absolute;right:14px;bottom:14px;font-size:16px;pointer-events:none;opacity:.2}
-.login-row{display:flex;align-items:center;justify-content:space-between;margin:-6px 0 28px}
-.remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer}
-.remember input[type=checkbox]{appearance:none;width:16px;height:16px;border:1px solid var(--border);border-radius:4px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:background .2s,border-color .2s}
-.remember input:checked{background:var(--red);border-color:var(--red)}
-.remember input:checked::after{content:'\2713';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:700}
-.forgot{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s}
-.forgot:hover{color:var(--red)}
-.btn-login{width:100%;background:var(--premium-gradient);color:#fff;border:none;border-radius:10px;padding:16px;font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:3px;cursor:pointer;transition:opacity .2s,transform .15s,box-shadow .25s;box-shadow:0 4px 24px rgba(232,58,47,.35)}
-.btn-login:hover{opacity:.9;box-shadow:0 8px 36px rgba(232,58,47,.5)}
+.login-inner{display:grid;grid-template-columns:1fr 1px 400px;max-width:880px;width:100%;animation:slideUp .7s cubic-bezier(.16,1,.3,1) both}
+.brand{padding:64px 56px 64px 0;display:flex;flex-direction:column;justify-content:space-between}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:44px}
+.logo-icon{width:48px;height:48px;background:var(--primary-gradient);border-radius:14px;
+  display:grid;place-items:center;font-size:22px;
+  box-shadow:0 0 28px rgba(6,182,212,.35),inset 0 1px 0 rgba(255,255,255,.15)}
+.logo-text{font-size:22px;font-weight:800;letter-spacing:.2px;
+  background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.headline{font-size:clamp(48px,5.5vw,76px);font-weight:800;line-height:.95;letter-spacing:-1px;margin-bottom:24px}
+.headline span{background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+.brand-sub{font-size:15px;color:var(--muted2);line-height:1.75;max-width:280px;margin-bottom:48px;font-weight:400}
+.brand-stats{display:flex;gap:36px}
+.stat-n{font-size:28px;font-weight:800;letter-spacing:-.5px;
+  background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.stat-l-sm{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
+.vdiv{background:linear-gradient(to bottom,transparent,var(--border2),transparent);width:1px}
+.login-form{padding:64px 0 64px 56px}
+.form-title{font-size:28px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;color:var(--text)}
+.form-sub{font-size:13px;color:var(--muted2);margin-bottom:36px;font-weight:400}
+.field.lf{margin-bottom:18px;position:relative}
+.field.lf input{background:rgba(255,255,255,.04);padding:14px 16px;border-radius:12px}
+.field-icon{position:absolute;right:14px;bottom:13px;font-size:16px;pointer-events:none;opacity:.2}
+.login-row{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 28px}
+.remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted2);cursor:pointer;font-weight:500}
+.remember input[type=checkbox]{appearance:none;width:16px;height:16px;border:1px solid var(--border2);
+  border-radius:5px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:all .2s}
+.remember input:checked{background:var(--cyan);border-color:var(--cyan)}
+.remember input:checked::after{content:'\2713';position:absolute;inset:0;display:grid;place-items:center;color:#000;font-size:10px;font-weight:800}
+.forgot{font-size:13px;color:var(--muted2);text-decoration:none;font-weight:500;transition:color .2s}
+.forgot:hover{color:var(--cyan)}
+.btn-login{width:100%;background:var(--primary-gradient);color:#fff;border:none;border-radius:12px;padding:14px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;letter-spacing:.2px;cursor:pointer;
+  transition:all .25s;box-shadow:0 4px 24px rgba(6,182,212,.35)}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 36px rgba(6,182,212,.5)}
 .btn-login:active{transform:scale(.98)}
-.btn-login:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
-.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px}
+.btn-login:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
+.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px}
 .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.btn-guest{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border);border-radius:10px;padding:13px;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .25s,color .25s,background .25s}
-.btn-guest:hover{border-color:rgba(255,255,255,.15);color:var(--text);background:rgba(255,255,255,.025)}
-.page-link{display:block;text-align:center;margin-top:16px;font-size:13px;color:var(--muted);cursor:pointer;transition:color .2s}
-.page-link:hover{color:var(--text)}
-.msg{border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none}
+.btn-guest{width:100%;background:transparent;color:var(--muted2);border:1px solid var(--border2);border-radius:12px;
+  padding:12px;font-family:'Outfit',sans-serif;font-size:14px;font-weight:500;cursor:pointer;transition:all .25s}
+.btn-guest:hover{border-color:rgba(6,182,212,.3);color:var(--text);background:rgba(6,182,212,.04)}
+.page-link{display:block;text-align:center;margin-top:18px;font-size:13px;color:var(--muted2);cursor:pointer;
+  transition:color .2s;font-weight:500}
+.page-link:hover{color:var(--cyan)}
+.msg{border-radius:10px;padding:11px 14px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
 .msg.show{display:block}
-.msg-err{background:rgba(232,58,47,.07);border:1px solid rgba(232,58,47,.22);color:#f87171;animation:shake .35s ease}
-.msg-suc{background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.22);color:#4ade80}
+.msg-err{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.25);color:var(--rose);animation:shake .35s ease}
+.msg-suc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);color:var(--emerald)}
 
-/* ── Register page layout ───────────────────────────────────── */
+/* ── Register page ──────────────────────────────────────────── */
 .reg-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
-.reg-wrap{width:100%;max-width:440px;animation:up .6s cubic-bezier(.16,1,.3,1) both}
+.reg-wrap{width:100%;max-width:440px;animation:slideUp .6s cubic-bezier(.16,1,.3,1) both}
 .reg-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:32px}
-.reg-logo-icon{width:40px;height:40px;background:var(--premium-gradient);border-radius:10px;display:grid;place-items:center;font-size:18px;box-shadow:0 0 20px rgba(232,58,47,.3)}
-.reg-logo-text{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px}
-.reg-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:2px;margin-bottom:4px}
-.reg-sub{font-size:13px;color:var(--muted);margin-bottom:32px}
-.field.rf input,.field.rf select{background:#0b0b18;padding:13px 15px;border-radius:10px}
-.btn-reg{width:100%;background:var(--premium-gradient);color:#fff;border:none;border-radius:10px;padding:14px;font-family:'Bebas Neue',sans-serif;font-size:17px;letter-spacing:3px;cursor:pointer;transition:opacity .2s,transform .15s,box-shadow .25s;margin-top:4px;box-shadow:0 4px 20px rgba(232,58,47,.3)}
-.btn-reg:hover{opacity:.9;box-shadow:0 6px 28px rgba(232,58,47,.45)}
+.reg-logo-icon{width:42px;height:42px;background:var(--primary-gradient);border-radius:12px;
+  display:grid;place-items:center;font-size:20px;box-shadow:0 0 22px rgba(6,182,212,.3)}
+.reg-logo-text{font-size:20px;font-weight:800;letter-spacing:.2px;
+  background:var(--primary-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.reg-title{font-size:28px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;color:var(--text)}
+.reg-sub{font-size:13px;color:var(--muted2);margin-bottom:28px;font-weight:400}
+.field.rf input,.field.rf select{background:rgba(255,255,255,.04);padding:13px 15px;border-radius:12px}
+.btn-reg{width:100%;background:var(--primary-gradient);color:#fff;border:none;border-radius:12px;padding:13px;
+  font-family:'Outfit',sans-serif;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .25s;margin-top:4px;box-shadow:0 4px 20px rgba(6,182,212,.3)}
+.btn-reg:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(6,182,212,.45)}
 .btn-reg:active{transform:scale(.98)}
-.btn-reg:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.btn-reg:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
 
 /* ── Sport metrics panel ────────────────────────────────────── */
-.sport-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.sport-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px}
 .sport-metric-col{display:flex;flex-direction:column;gap:10px}
-.sport-metric-heading{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:4px}
+.sport-metric-heading{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted2);margin-bottom:6px}
 .sport-metric-row{display:flex;align-items:center;gap:10px;font-size:13px}
-.sport-metric-label{min-width:170px;color:var(--text);flex-shrink:0}
-.sport-metric-track{flex:1;height:8px;background:#080812;border-radius:4px;overflow:hidden;min-width:60px}
-.sport-metric-fill{height:100%;border-radius:4px;transition:width .75s cubic-bezier(.16,1,.3,1)}
-.sport-metric-pct{font-size:12px;min-width:36px;text-align:right;color:var(--muted)}
-.sport-panel-bench{font-size:12px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
-.sport-panel-bench span{color:var(--text)}
+.sport-metric-label{min-width:170px;color:var(--text);flex-shrink:0;font-weight:500}
+.sport-metric-track{flex:1;height:6px;background:rgba(255,255,255,.05);border-radius:3px;overflow:hidden;min-width:60px}
+.sport-metric-fill{height:100%;border-radius:3px;transition:width .75s cubic-bezier(.16,1,.3,1)}
+.sport-metric-pct{font-size:12px;font-weight:600;min-width:36px;text-align:right;color:var(--muted2)}
+.sport-panel-bench{font-size:12px;color:var(--muted2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.sport-panel-bench span{color:var(--text);font-weight:600}
 
 /* ── Task Management ────────────────────────────────────────── */
-.task-form-row{display:grid;grid-template-columns:1fr 1fr 1fr 140px auto;gap:12px;align-items:end;margin-bottom:20px}
+.task-form-row{display:grid;grid-template-columns:1fr 1fr 1fr 150px auto;gap:12px;align-items:end;margin-bottom:20px}
 @media(max-width:700px){.task-form-row{grid-template-columns:1fr}}
-.task-list{display:flex;flex-direction:column;gap:10px}
-.task-item{background:#080812;border:1px solid var(--border);border-radius:12px;padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;transition:transform .2s,border-color .25s}
-.task-item:hover{transform:translateX(4px);border-color:#222236}
+.task-list{display:flex;flex-direction:column;gap:8px}
+.task-item{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:14px;
+  padding:14px 18px;display:flex;align-items:flex-start;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;transition:all .2s}
+.task-item:hover{border-color:var(--border2);background:rgba(6,182,212,.02);transform:translateX(3px)}
 .task-info{flex:1;min-width:0}
-.task-title{font-weight:500;font-size:14px;margin-bottom:3px}
-.task-meta{font-size:12px;color:var(--muted)}
+.task-title{font-weight:600;font-size:14px;margin-bottom:4px;color:var(--text)}
+.task-meta{font-size:12px;color:var(--muted2)}
 .task-actions{display:flex;gap:8px;flex-shrink:0;align-items:center}
-.task-btn{border:1px solid var(--border);background:transparent;color:var(--muted);padding:6px 12px;border-radius:8px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif}
-.task-btn:hover{background:rgba(255,255,255,.03)}
-.task-btn.complete{border-color:rgba(74,222,128,.3);color:var(--green)}
-.task-btn.complete:hover{background:rgba(74,222,128,.07);box-shadow:0 0 12px rgba(74,222,128,.12)}
-.task-btn.snooze{border-color:rgba(96,165,250,.3);color:var(--blue)}
-.task-btn.snooze:hover{background:rgba(96,165,250,.07)}
-.task-btn.miss{border-color:rgba(232,58,47,.3);color:#f87171}
-.task-btn.miss:hover{background:rgba(232,58,47,.07)}
-.task-status{font-size:11px;padding:3px 10px;border-radius:12px;white-space:nowrap}
-.ts-pending{background:rgba(245,197,24,.1);color:var(--accent);border:1px solid rgba(245,197,24,.22)}
-.ts-completed{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.22)}
-.ts-missed{background:rgba(232,58,47,.1);color:#f87171;border:1px solid rgba(232,58,47,.22)}
-.ts-snoozed{background:rgba(96,165,250,.1);color:var(--blue);border:1px solid rgba(96,165,250,.22)}
+.task-btn{border:1px solid var(--border);background:transparent;color:var(--muted2);padding:6px 12px;
+  border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;font-family:'Outfit',sans-serif}
+.task-btn:hover{background:rgba(255,255,255,.04)}
+.task-btn.complete{border-color:rgba(16,185,129,.3);color:var(--emerald)}
+.task-btn.complete:hover{background:rgba(16,185,129,.08)}
+.task-btn.snooze{border-color:rgba(6,182,212,.3);color:var(--cyan)}
+.task-btn.snooze:hover{background:rgba(6,182,212,.07)}
+.task-btn.miss{border-color:rgba(244,63,94,.3);color:var(--rose)}
+.task-btn.miss:hover{background:rgba(244,63,94,.07)}
+.task-status{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.3px;text-transform:uppercase}
+.ts-pending{background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
+.ts-completed{background:rgba(16,185,129,.1);color:var(--emerald);border:1px solid rgba(16,185,129,.25)}
+.ts-missed{background:rgba(244,63,94,.1);color:var(--rose);border:1px solid rgba(244,63,94,.25)}
+.ts-snoozed{background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.25)}
+
+/* ── Section divider ────────────────────────────────────────── */
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;
+  color:var(--muted2);margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* ── Responsive ─────────────────────────────────────────────── */
-@media(max-width:700px){
+@media(max-width:768px){
   .grid,.result-grid,.input-row{grid-template-columns:1fr}
-  nav{padding:12px 18px}
+  nav{padding:0 18px}
   main{padding:24px 16px}
   .login-inner{grid-template-columns:1fr;max-width:420px}
   .brand,.vdiv{display:none}
-  .login-form{padding:50px 0}
+  .login-form{padding:48px 0}
   .stat-cards{grid-template-columns:1fr 1fr}
+  .task-form-row{grid-template-columns:1fr 1fr}
 }
 </style>
 </head>
@@ -278,26 +368,38 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
     <div class="login-inner">
       <div class="brand">
         <div>
-          <div class="logo-row"><div class="logo-icon">🏃</div><div class="logo-text">APEX PRO</div><span class="pro-badge">Elite</span></div>
-          <div class="headline">TRACK.<br>ANALYZE.<br><span>DOMINATE.</span></div>
-          <p class="brand-sub">The elite performance platform for athletes and coaches. Analyze, optimize, and dominate your sport.</p>
+          <div class="logo-row">
+            <div class="logo-icon">⚡</div>
+            <div class="logo-text">PULSE</div>
+            <span class="pro-badge">Pro</span>
+          </div>
+          <div class="headline">
+            TRAIN.<br>MEASURE.<br><span>EXCEL.</span>
+          </div>
+          <p class="brand-sub">The intelligent sports performance platform for elite athletes and coaches. Data-driven insights to unlock your full potential.</p>
         </div>
         <div class="brand-stats">
-          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">12K+</span><span class="stat-l-sm">Athletes</span></div>
-          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">98M</span><span class="stat-l-sm">Sessions</span></div>
-          <div style="display:flex;flex-direction:column;gap:4px"><span class="stat-n">4.9★</span><span class="stat-l-sm">Rating</span></div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="stat-n">12K+</span><span class="stat-l-sm">Athletes</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="stat-n">98M</span><span class="stat-l-sm">Sessions</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:4px">
+            <span class="stat-n">4.9★</span><span class="stat-l-sm">Rating</span>
+          </div>
         </div>
       </div>
       <div class="vdiv"></div>
       <div class="login-form">
-        <div class="form-title">WELCOME BACK</div>
+        <div class="form-title">Welcome back</div>
         <p class="form-sub">Sign in to continue your journey</p>
         <div class="msg msg-err" id="loginErrMsg"></div>
         <div class="msg msg-suc" id="loginSucMsg"></div>
         <div class="field lf">
-          <label>Email</label>
+          <label>Email address</label>
           <input type="email" id="username" placeholder="coach@example.com" autocomplete="username">
-          <span class="field-icon">👤</span>
+          <span class="field-icon">✉</span>
         </div>
         <div class="field lf">
           <label>Password</label>
@@ -308,10 +410,10 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
           <label class="remember"><input type="checkbox" id="remember"> Keep me signed in</label>
           <a href="#" class="forgot">Forgot password?</a>
         </div>
-        <button class="btn-login" onclick="login()" id="loginBtn">LOGIN</button>
+        <button class="btn-login" onclick="login()" id="loginBtn">Sign In</button>
         <div class="divider">or</div>
-        <button class="btn-guest" onclick="guestLogin()">Continue as Guest</button>
-        <span class="page-link" onclick="showPage('register')">Don't have an account? Register</span>
+        <button class="btn-guest" onclick="guestLogin()">Continue as Guest →</button>
+        <span class="page-link" onclick="showPage('register')">Don't have an account? <strong style="color:var(--cyan)">Create one</strong></span>
       </div>
     </div>
   </div>
@@ -324,20 +426,27 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
   <div class="login-bg"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
   <div class="reg-outer">
     <div class="reg-wrap">
-      <div class="reg-logo-row"><div class="reg-logo-icon">🏃</div><div class="reg-logo-text">APEX PRO</div><span class="pro-badge">Elite</span></div>
-      <div class="reg-title">CREATE ACCOUNT</div>
-      <p class="reg-sub">Join and start tracking your performance</p>
+      <div class="reg-logo-row">
+        <div class="reg-logo-icon">⚡</div>
+        <div class="reg-logo-text">PULSE</div>
+        <span class="pro-badge">Pro</span>
+      </div>
+      <div class="reg-title">Create your account</div>
+      <p class="reg-sub">Join thousands of athletes on PULSE</p>
       <div class="msg msg-err" id="regErrMsg"></div>
       <div class="msg msg-suc" id="regSucMsg"></div>
-      <div class="field rf"><label>Email</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
+      <div class="field rf"><label>Email address</label><input type="email" id="regEmail" placeholder="you@example.com"></div>
       <div class="field rf"><label>Password (min 6 chars)</label><input type="password" id="regPass" placeholder="••••••••"></div>
       <div class="field rf"><label>Confirm Password</label><input type="password" id="regConfirm" placeholder="••••••••"></div>
       <div class="field rf">
-        <label>Role</label>
-        <select id="regRole"><option value="athlete">Athlete</option><option value="coach">Coach</option></select>
+        <label>I am a…</label>
+        <select id="regRole">
+          <option value="athlete">🏃 Athlete</option>
+          <option value="coach">🎯 Coach</option>
+        </select>
       </div>
-      <button class="btn-reg" onclick="register()" id="regBtn">REGISTER</button>
-      <span class="page-link" onclick="showPage('login')" style="margin-top:20px">Already have an account? Login</span>
+      <button class="btn-reg" onclick="register()" id="regBtn">Create Account</button>
+      <span class="page-link" onclick="showPage('login')" style="margin-top:20px">Already have an account? <strong style="color:var(--cyan)">Sign in</strong></span>
     </div>
   </div>
 </div>
@@ -347,50 +456,90 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
 ════════════════════════════════════════════════════════════ -->
 <div id="page-dashboard" class="spa-page">
   <nav>
-    <div class="nav-logo"><div class="nav-logo-icon">🏅</div> APEX PRO <span class="pro-badge">Elite</span></div>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      <span class="nav-logo-text">PULSE</span>
+      <span class="pro-badge">Pro</span>
+    </div>
     <div class="nav-right">
-      <button class="nav-link" onclick="showPage('compare');initCompare()">Compare Athletes</button>
+      <div class="nav-links">
+        <a onclick="showPage('compare');initCompare()">⚖ Compare Athletes</a>
+      </div>
       <span class="badge" id="userBadge">Guest</span>
-      <span class="badge" id="roleBadge" style="background:rgba(232,58,47,.15);color:#fca5a5;border-color:rgba(232,58,47,.3)">Coach</span>
-      <button class="btn-nav" onclick="logout()">Logout</button>
+      <span class="badge" id="roleBadge" style="background:rgba(6,182,212,.1);color:var(--cyan);border-color:rgba(6,182,212,.25)">Coach</span>
+      <button class="btn-nav" onclick="logout()">Sign out</button>
     </div>
   </nav>
   <main>
-    <div class="page-title">PERFORMANCE DASHBOARD</div>
-    <p class="page-sub">Track athlete sessions and monitor progress in real time.</p>
-    <div class="field" style="max-width:300px;margin-bottom:24px">
-      <label>Sport</label>
-      <select id="sportSelect" onchange="onSportChange()">
-        <option value="Running">🏃 Running</option>
-        <option value="Swimming">🏊 Swimming</option>
-        <option value="Basketball">🏀 Basketball</option>
-        <option value="Football">⚽ Football</option>
-        <option value="Tennis">🎾 Tennis</option>
-        <option value="Cycling">🚴 Cycling</option>
-        <option value="Weightlifting">🏋️ Weightlifting</option>
-      </select>
+    <div class="page-header">
+      <div class="page-title">Performance Dashboard</div>
+      <p class="page-sub">Track athlete sessions and monitor progress in real time</p>
     </div>
-    <!-- Sport Metrics Overview Panel -->
-    <div class="card full" id="sportMetricsPanel" style="margin-bottom:20px">
-      <div class="card-title" id="sportPanelTitle" style="margin-bottom:16px">🏃 RUNNING — SCORE BREAKDOWN</div>
+
+    <!-- Sport selector -->
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap">
+      <div class="field" style="max-width:240px;margin-bottom:0">
+        <label>Select Sport</label>
+        <select id="sportSelect" onchange="onSportChange()">
+          <option value="Running">🏃 Running</option>
+          <option value="Swimming">🏊 Swimming</option>
+          <option value="Basketball">🏀 Basketball</option>
+          <option value="Football">⚽ Football</option>
+          <option value="Tennis">🎾 Tennis</option>
+          <option value="Cycling">🚴 Cycling</option>
+          <option value="Weightlifting">🏋️ Weightlifting</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Sport Metrics Panel -->
+    <div class="card full" id="sportMetricsPanel" style="margin-bottom:24px">
+      <div class="card-title" id="sportPanelTitle">🏃 RUNNING — SCORE BREAKDOWN</div>
       <div class="sport-panel" id="sportPanelContent"></div>
     </div>
+
+    <!-- AI Suggestion -->
     <div class="suggestion" id="suggestionBox">
       <span class="suggestion-icon">💡</span>
       <span class="suggestion-text" id="suggestionText"></span>
     </div>
+
+    <!-- Stat Cards -->
     <div class="stat-cards">
-      <div class="stat-card"><span class="stat-card-icon">🏋️</span><div class="stat-label">Sessions</div><div class="stat-value yellow" id="totalSessions">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">⭐</span><div class="stat-label">Avg Score</div><div class="stat-value yellow" id="avgScore">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">📈</span><div class="stat-label">Trend</div><div class="stat-value yellow" id="stat-trend">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">⚡</span><div class="stat-label">Avg Speed</div><div class="stat-value green" id="avgSpeed">0.00</div></div>
-      <div class="stat-card"><span class="stat-card-icon">🏆</span><div class="stat-label">Best Speed</div><div class="stat-value red" id="bestSpeed">0.00</div></div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🏋️</span>
+        <div class="stat-label">Sessions</div>
+        <div class="stat-value yellow" id="totalSessions">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">⭐</span>
+        <div class="stat-label">Avg Score</div>
+        <div class="stat-value yellow" id="avgScore">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">📈</span>
+        <div class="stat-label">Trend</div>
+        <div class="stat-value yellow" id="stat-trend">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">⚡</span>
+        <div class="stat-label">Avg Speed</div>
+        <div class="stat-value green" id="avgSpeed">0.00</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🏆</span>
+        <div class="stat-label">Best Speed</div>
+        <div class="stat-value blue" id="bestSpeed">0.00</div>
+      </div>
     </div>
+
+    <!-- Main Grid -->
     <div class="grid">
+      <!-- Log Session -->
       <div class="card">
-        <div class="card-title">ADD PERFORMANCE</div>
+        <div class="card-title">🎯 Log Session</div>
         <div class="field">
-          <label for="athleteInput">Athlete Account</label>
+          <label>Athlete Account</label>
           <input type="email" id="athleteInput" list="athleteList" placeholder="athlete@example.com" autocomplete="off">
           <datalist id="athleteList"></datalist>
         </div>
@@ -398,35 +547,44 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
         <div class="field"><label id="lblTime">Time (sec)</label><input type="number" id="time" placeholder="e.g. 60" min="0"></div>
         <div class="field" id="fieldM1"><label id="lblM1">Sprint Form Score (0–100)</label><input type="number" id="m1Input" placeholder="e.g. 75" min="0" max="100" step="0.1"></div>
         <div class="field" id="fieldM2" style="display:none"><label id="lblM2">Metric 2 (0–100)</label><input type="number" id="m2Input" placeholder="e.g. 65" min="0" max="100" step="0.1"></div>
-        <button class="btn-save" onclick="saveData()">SAVE SESSION</button>
-        <div id="levelBadge"></div>
+        <button class="btn-save" onclick="saveData()">💾 Save Session</button>
+        <div id="levelBadge" style="margin-top:12px"></div>
       </div>
+
+      <!-- Speed Chart -->
       <div class="card">
-        <div class="card-title">SPEED OVER TIME</div>
+        <div class="card-title">📊 Speed Over Time</div>
         <canvas id="chart"></canvas>
       </div>
+
+      <!-- Records Table -->
       <div class="card full">
-        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-          RECORDS
-          <button class="btn-nav" onclick="resetData()" style="font-size:12px;">Reset All</button>
+        <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;text-transform:none">
+          <span class="card-title" style="margin-bottom:0">📋 Session Records</span>
+          <button class="btn-nav" onclick="resetData()" style="font-size:12px">Reset All</button>
         </div>
-        <table>
-          <thead>
-            <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th><th></th></tr>
-          </thead>
-          <tbody id="tableBody"></tbody>
-        </table>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Athlete</th><th>Sport</th><th id="thDistance">Distance</th><th>Time</th><th id="thSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th><th></th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <div id="accuracyReport" style="display:none;margin-top:24px">
+
+    <!-- Accuracy Report -->
+    <div id="accuracyReport" style="display:none;margin-top:4px">
       <div class="card full">
-        <div class="card-title">⚡ EFFICIENCY ANALYSIS</div>
+        <div class="card-title">⚡ Efficiency Analysis</div>
         <div id="reportContent"></div>
       </div>
     </div>
+
     <!-- Task Management -->
     <div class="card full" style="margin-top:24px">
-      <div class="card-title">📋 TASK MANAGEMENT</div>
+      <div class="card-title">📋 Task Management</div>
       <div class="task-form-row">
         <div class="field" style="margin-bottom:0">
           <label>Athlete Account</label>
@@ -438,15 +596,15 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
         </div>
         <div class="field" style="margin-bottom:0">
           <label>Description (optional)</label>
-          <input type="text" id="taskDesc" placeholder="Extra details for the athlete…">
+          <input type="text" id="taskDesc" placeholder="Extra notes…">
         </div>
         <div class="field" style="margin-bottom:0">
           <label>Due Date</label>
           <input type="date" id="taskDueDate">
         </div>
-        <button class="btn-save" onclick="addTask()" style="margin-top:0;align-self:flex-end">ADD TASK</button>
+        <button class="btn-save" onclick="addTask()" style="margin-top:0;align-self:flex-end">Add Task</button>
       </div>
-      <div id="coachTaskList" style="margin-top:8px"><p style="color:var(--muted);font-size:13px">No tasks created yet.</p></div>
+      <div id="coachTaskList" style="margin-top:12px"><p style="color:var(--muted2);font-size:13px">No tasks created yet.</p></div>
     </div>
   </main>
 </div>
@@ -456,22 +614,31 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
 ════════════════════════════════════════════════════════════ -->
 <div id="page-athlete" class="spa-page">
   <nav>
-    <div class="nav-logo"><div class="nav-logo-icon">🏅</div> APEX PRO <span class="pro-badge">Elite</span></div>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      <span class="nav-logo-text">PULSE</span>
+      <span class="pro-badge">Pro</span>
+    </div>
     <div class="nav-right">
       <span class="badge" id="aUserBadge">Athlete</span>
       <span class="badge athlete">Athlete</span>
-      <button class="btn-nav" onclick="logout()">Logout</button>
+      <button class="btn-nav" onclick="logout()">Sign out</button>
     </div>
   </nav>
   <main>
-    <div class="page-title">MY PERFORMANCE</div>
-    <p class="page-sub">View your training stats and track your progress.</p>
+    <div class="page-header">
+      <div class="page-title">My Performance</div>
+      <p class="page-sub">View your training stats and track your progress</p>
+    </div>
+
     <div class="info-box">
       <span>ℹ️</span>
       <span>Performance sessions are logged by your coach. Contact your coach to record new sessions.</span>
     </div>
-    <div class="field" style="max-width:300px;margin-bottom:24px">
-      <label>Sport</label>
+
+    <!-- Sport selector -->
+    <div class="field" style="max-width:240px;margin-bottom:24px">
+      <label>Select Sport</label>
       <select id="aSportSelect" onchange="aOnSportChange()">
         <option value="Running">🏃 Running</option>
         <option value="Swimming">🏊 Swimming</option>
@@ -482,45 +649,75 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
         <option value="Weightlifting">🏋️ Weightlifting</option>
       </select>
     </div>
-    <!-- Sport Metrics Overview Panel (athlete view) -->
-    <div class="card full" id="aSportMetricsPanel" style="margin-bottom:20px">
-      <div class="card-title" id="aSportPanelTitle" style="margin-bottom:16px">🏃 RUNNING — SCORE BREAKDOWN</div>
+
+    <!-- Sport Metrics Panel -->
+    <div class="card full" id="aSportMetricsPanel" style="margin-bottom:24px">
+      <div class="card-title" id="aSportPanelTitle">🏃 RUNNING — SCORE BREAKDOWN</div>
       <div class="sport-panel" id="aSportPanelContent"></div>
     </div>
+
+    <!-- Suggestion -->
     <div class="suggestion" id="aSuggestionBox">
       <span class="suggestion-icon">💡</span>
       <span class="suggestion-text" id="aSuggestionText"></span>
     </div>
+
+    <!-- Stat Cards -->
     <div class="stat-cards">
-      <div class="stat-card"><span class="stat-card-icon">🏋️</span><div class="stat-label">Total Sessions</div><div class="stat-value yellow" id="aTotalSessions">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">⭐</span><div class="stat-label">Avg Score</div><div class="stat-value yellow" id="aAvgScore">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">📈</span><div class="stat-label">Trend</div><div class="stat-value yellow" id="aStatTrend">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">🚀</span><div class="stat-label">Improvement</div><div class="stat-value blue" id="aStatImprovement">—</div></div>
-      <div class="stat-card"><span class="stat-card-icon">🏆</span><div class="stat-label">Level</div><div id="aStatLevel" style="margin-top:8px">—</div></div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🏋️</span>
+        <div class="stat-label">Total Sessions</div>
+        <div class="stat-value yellow" id="aTotalSessions">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">⭐</span>
+        <div class="stat-label">Avg Score</div>
+        <div class="stat-value yellow" id="aAvgScore">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">📈</span>
+        <div class="stat-label">Trend</div>
+        <div class="stat-value yellow" id="aStatTrend">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🚀</span>
+        <div class="stat-label">Improvement</div>
+        <div class="stat-value blue" id="aStatImprovement">—</div>
+      </div>
+      <div class="stat-card">
+        <span class="stat-card-icon">🏆</span>
+        <div class="stat-label">Level</div>
+        <div id="aStatLevel" style="margin-top:8px">—</div>
+      </div>
     </div>
+
+    <!-- Charts + Latest Session -->
     <div class="grid">
       <div class="card">
-        <div class="card-title">SCORE OVER TIME</div>
+        <div class="card-title">📊 Score Over Time</div>
         <canvas id="aChart"></canvas>
       </div>
       <div class="card">
-        <div class="card-title">LATEST SESSION</div>
-        <div id="aLatestBox" style="font-size:14px;color:var(--muted)">No sessions recorded yet.</div>
+        <div class="card-title">🕐 Latest Session</div>
+        <div id="aLatestBox" style="font-size:14px;color:var(--muted2)">No sessions recorded yet.</div>
       </div>
       <div class="card full">
-        <div class="card-title">MY SESSION HISTORY</div>
-        <table>
-          <thead>
-            <tr><th>#</th><th>Sport</th><th id="aThDist">Distance</th><th>Time</th><th id="aThSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th></tr>
-          </thead>
-          <tbody id="aTableBody"></tbody>
-        </table>
+        <div class="card-title">📋 My Session History</div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead>
+              <tr><th>#</th><th>Sport</th><th id="aThDist">Distance</th><th>Time</th><th id="aThSpeed">Speed</th><th>Efficiency %</th><th>Score</th><th>Level</th></tr>
+            </thead>
+            <tbody id="aTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </div>
+
     <!-- My Tasks -->
-    <div class="card full" style="margin-top:24px">
-      <div class="card-title">📋 MY TASKS</div>
-      <div id="athleteTaskList"><p style="color:var(--muted);font-size:13px">No tasks assigned yet.</p></div>
+    <div class="card full" style="margin-top:4px">
+      <div class="card-title">📋 My Tasks</div>
+      <div id="athleteTaskList"><p style="color:var(--muted2);font-size:13px">No tasks assigned yet.</p></div>
     </div>
   </main>
 </div>
@@ -530,23 +727,31 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
 ════════════════════════════════════════════════════════════ -->
 <div id="page-compare" class="spa-page">
   <nav>
-    <div class="nav-logo"><div class="nav-logo-icon">🏅</div> APEX PRO <span class="pro-badge">Elite</span></div>
+    <div class="nav-logo">
+      <div class="nav-logo-icon">⚡</div>
+      <span class="nav-logo-text">PULSE</span>
+      <span class="pro-badge">Pro</span>
+    </div>
     <div class="nav-links">
-      <a onclick="showPage('dashboard');initDashboard()">Dashboard</a>
-      <a class="active">Compare</a>
-      <a onclick="logout()">Logout</a>
+      <a onclick="showPage('dashboard');initDashboard()">← Dashboard</a>
+      <a class="active">⚖ Compare</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-nav" onclick="logout()">Sign out</button>
     </div>
   </nav>
   <main style="max-width:1000px">
-    <div class="page-title">ATHLETE COMPARISON</div>
-    <p class="page-sub">Enter two athlete email addresses and select a sport to compare their performance.</p>
+    <div class="page-header">
+      <div class="page-title">Athlete Comparison</div>
+      <p class="page-sub">Enter two athlete email addresses and select a sport to compare their performance</p>
+    </div>
     <div class="err-box" id="cmpErrBox"></div>
     <div class="input-row" style="grid-template-columns:1fr 1fr 1fr auto">
-      <div class="field"><label>Athlete A (email)</label><input type="text" id="cmpAthleteA" placeholder="coach@example.com"></div>
-      <div class="field"><label>Athlete B (email)</label><input type="text" id="cmpAthleteB" placeholder="athlete2@example.com"></div>
+      <div class="field"><label>Athlete A (email)</label><input type="text" id="cmpAthleteA" placeholder="athlete.a@example.com"></div>
+      <div class="field"><label>Athlete B (email)</label><input type="text" id="cmpAthleteB" placeholder="athlete.b@example.com"></div>
       <div class="field">
         <label>Sport</label>
-        <select id="cmpSport" style="background:#161616">
+        <select id="cmpSport">
           <option value="Running">🏃 Running</option>
           <option value="Swimming">🏊 Swimming</option>
           <option value="Basketball">🏀 Basketball</option>
@@ -556,7 +761,7 @@ tbody tr:hover td{background:rgba(232,58,47,.03)}
           <option value="Weightlifting">🏋️ Weightlifting</option>
         </select>
       </div>
-      <button class="btn-compare" onclick="compare()" id="cmpBtn">COMPARE</button>
+      <button class="btn-compare" onclick="compare()" id="cmpBtn">Compare →</button>
     </div>
     <div class="cmp-banner" id="cmpBanner"></div>
     <div class="result-grid" id="cmpResultGrid">
@@ -599,11 +804,11 @@ var chartInstance, aChartInst, cmpChartInst;
 // ── SPA Router ─────────────────────────────────────────────────
 
 var PAGE_TITLES = {
-  login:     "APEX PRO — Login",
-  register:  "APEX PRO — Register",
-  dashboard: "APEX PRO — Coach Dashboard",
-  athlete:   "APEX PRO — My Performance",
-  compare:   "APEX PRO — Compare Athletes"
+  login:     "PULSE — Login",
+  register:  "PULSE — Register",
+  dashboard: "PULSE — Coach Dashboard",
+  athlete:   "PULSE — My Performance",
+  compare:   "PULSE — Compare Athletes"
 };
 
 function showPage(name) {
@@ -611,7 +816,7 @@ function showPage(name) {
     var el = document.getElementById("page-" + p);
     if (el) el.style.display = (p === name) ? "block" : "none";
   });
-  document.title = PAGE_TITLES[name] || "APEX PRO";
+  document.title = PAGE_TITLES[name] || "PULSE";
 }
 
 function route() {
@@ -733,11 +938,11 @@ function updateSportPanel(sport, titleId, contentId) {
 
   var metrics = [];
   if (cfg.wSpeed > 0) {
-    metrics.push({label: cfg.speed, weight: cfg.wSpeed, color: "#E83A2F", note: "auto-calculated"});
+    metrics.push({label: cfg.speed, weight: cfg.wSpeed, color: "#06b6d4", note: "auto-calculated"});
   }
-  metrics.push({label: cfg.m1.replace(" (0–100)", ""), weight: cfg.wM1, color: "#F5C518", note: "coach-entered"});
+  metrics.push({label: cfg.m1.replace(" (0–100)", ""), weight: cfg.wM1, color: "#10b981", note: "coach-entered"});
   if (cfg.showM2 && cfg.m2) {
-    metrics.push({label: cfg.m2.replace(" (0–100)", ""), weight: cfg.wM2, color: "#60a5fa", note: "coach-entered"});
+    metrics.push({label: cfg.m2.replace(" (0–100)", ""), weight: cfg.wM2, color: "#8b5cf6", note: "coach-entered"});
   }
 
   var metricsHtml = "<div class='sport-metric-col'>" +
@@ -958,31 +1163,31 @@ function showAccuracyReport(data, cfg) {
   if (cfg.wSpeed > 0) {
     bars +=
       "<div class='report-bar-row'><span class='report-bar-label'>Speed Efficiency (" + escapeHtml(cfg.speed) + ")</span>" +
-      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + effPct + "%;background:#E83A2F'></div></div>" +
+      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + effPct + "%;background:#06b6d4'></div></div>" +
       "<span class='report-bar-pct'>" + effPct + "%</span></div>";
   }
   var m1Pct = Math.round(parseFloat(rpt.m1Contrib) || 0);
   var m2Pct = Math.round(parseFloat(rpt.m2Contrib) || 0);
   bars +=
     "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(cfg.m1.replace(" (0–100)","")) + "</span>" +
-    "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m1Pct, 100) + "%;background:#F5C518'></div></div>" +
+    "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m1Pct, 100) + "%;background:#10b981'></div></div>" +
     "<span class='report-bar-pct'>" + (parseFloat(rpt.m1Contrib || 0)).toFixed(1) + "</span></div>";
   if (cfg.showM2 && cfg.m2) {
     bars +=
       "<div class='report-bar-row'><span class='report-bar-label'>" + escapeHtml(cfg.m2.replace(" (0–100)","")) + "</span>" +
-      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m2Pct, 100) + "%;background:#60a5fa'></div></div>" +
+      "<div class='report-bar-track'><div class='report-bar-fill' style='width:" + Math.min(m2Pct, 100) + "%;background:#8b5cf6'></div></div>" +
       "<span class='report-bar-pct'>" + (parseFloat(rpt.m2Contrib || 0)).toFixed(1) + "</span></div>";
   }
   reportContent.innerHTML =
     "<div class='report-grid'>" +
-    "<div class='report-item'><div class='report-item-label'>Efficiency Score</div><div class='report-item-value' style='color:var(--accent)'>" + score + "</div>" +
-    "<div style='margin-top:4px'><span class='level-badge " + levelCls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></div></div>" +
-    "<div class='report-item'><div class='report-item-label'>Sessions (this sport)</div><div class='report-item-value' style='color:var(--green)'>" + (rpt.sessionCount || 1) + "</div>" + changeHtml + "</div>" +
-    "<div class='report-item'><div class='report-item-label'>Next Goal</div><div class='report-item-value' style='color:var(--blue);font-size:20px'>" + (rpt.nextLevel === "Peak" ? "🏆" : escapeHtml(rpt.nextLevel)) + "</div>" + nextHtml + "</div>" +
+    "<div class='report-item'><div class='report-item-label'>Efficiency Score</div><div class='report-item-value' style='color:var(--cyan)'>" + score + "</div>" +
+    "<div style='margin-top:6px'><span class='level-badge " + levelCls + "' style='font-size:11px;padding:3px 10px'>" + level + "</span></div></div>" +
+    "<div class='report-item'><div class='report-item-label'>Sessions (this sport)</div><div class='report-item-value' style='color:var(--emerald)'>" + (rpt.sessionCount || 1) + "</div>" + changeHtml + "</div>" +
+    "<div class='report-item'><div class='report-item-label'>Next Goal</div><div class='report-item-value' style='color:var(--teal);font-size:20px'>" + (rpt.nextLevel === "Peak" ? "🏆" : escapeHtml(rpt.nextLevel)) + "</div>" + nextHtml + "</div>" +
     "<div class='report-item'><div class='report-item-label'>Speed vs Benchmark</div><div class='report-item-value' style='color:var(--text)'>" + effPct + "%</div>" +
-    "<div style='font-size:12px;color:var(--muted);margin-top:4px'>of max benchmark speed</div></div>" +
+    "<div style='font-size:12px;color:var(--muted2);margin-top:4px'>of max benchmark speed</div></div>" +
     "</div>" +
-    "<div style='margin-bottom:8px;font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)'>Efficiency Breakdown</div>" +
+    "<div style='margin-bottom:10px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted2)'>Efficiency Breakdown</div>" +
     bars;
   reportDiv.style.display = "";
   reportDiv.scrollIntoView({behavior: "smooth", block: "nearest"});
@@ -1025,8 +1230,8 @@ function drawChart(records, cfg) {
   if (chartInstance) chartInstance.destroy();
   chartInstance = new Chart(canvas, {
     type: "line",
-    data: {labels: labels, datasets: [{label: sportCfg.speed, data: speeds, fill: true, borderColor: "#E83A2F", backgroundColor: "rgba(232,58,47,0.08)", pointBackgroundColor: "#E83A2F", tension: 0.4}]},
-    options: {responsive: true, plugins: {legend: {labels: {color: "#666"}}}, scales: {x: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}, y: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}}}
+    data: {labels: labels, datasets: [{label: sportCfg.speed, data: speeds, fill: true, borderColor: "#06b6d4", backgroundColor: "rgba(6,182,212,0.07)", pointBackgroundColor: "#06b6d4", pointBorderColor: "#0ea5e9", tension: 0.4}]},
+    options: {responsive: true, plugins: {legend: {labels: {color: "#4a6080",font:{family:"Outfit"}}}}, scales: {x: {ticks: {color: "#4a6080"}, grid: {color: "rgba(30,45,74,.4)"}}, y: {ticks: {color: "#4a6080"}, grid: {color: "rgba(30,45,74,.4)"}}}}
   });
 }
 
@@ -1144,7 +1349,7 @@ function aFetchRecords() {
       latestEl.innerHTML =
         "<div style='display:flex;flex-direction:column;gap:10px'>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>" + escapeHtml(last.sport) + "</span></div>" +
-        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Score</span><span style='color:var(--accent);font-family:Bebas Neue,sans-serif;font-size:24px'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted2)'>Score</span><span style='color:var(--cyan);font-family:Outfit,sans-serif;font-size:28px;font-weight:800'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge " + aLevelClass(last.level) + "' style='font-size:11px;padding:3px 10px'>" + lLvl + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>" + parseFloat(last.speed).toFixed(2) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Efficiency</span><span>" + parseFloat(last.accuracy).toFixed(1) + "%</span></div>" +
@@ -1161,8 +1366,8 @@ function aDrawChart(scores) {
   if (aChartInst) aChartInst.destroy();
   aChartInst = new Chart(canvas, {
     type: "line",
-    data: {labels: labels, datasets: [{label: "Score", data: scores, fill: true, borderColor: "#60a5fa", backgroundColor: "rgba(96,165,250,0.08)", pointBackgroundColor: "#60a5fa", tension: 0.4}]},
-    options: {responsive: true, plugins: {legend: {labels: {color: "#666"}}}, scales: {x: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}}, y: {ticks: {color: "#666"}, grid: {color: "#1e1e1e"}, beginAtZero: true}}}
+    data: {labels: labels, datasets: [{label: "Score", data: scores, fill: true, borderColor: "#10b981", backgroundColor: "rgba(16,185,129,0.07)", pointBackgroundColor: "#10b981", tension: 0.4}]},
+    options: {responsive: true, plugins: {legend: {labels: {color: "#4a6080",font:{family:"Outfit"}}}}, scales: {x: {ticks: {color: "#4a6080"}, grid: {color: "rgba(30,45,74,.4)"}}, y: {ticks: {color: "#4a6080"}, grid: {color: "rgba(30,45,74,.4)"}, beginAtZero: true}}}
   });
 }
 
@@ -1342,8 +1547,8 @@ function compare() {
     if (cmpChartInst) cmpChartInst.destroy();
     cmpChartInst = new Chart(document.getElementById("cmpChart"), {
       type: "bar",
-      data: {labels: ["Avg Score","Sessions"], datasets: [{label:nA, data:[+avgA.toFixed(2),recA.length], backgroundColor:"#E83A2F"},{label:nB, data:[+avgB.toFixed(2),recB.length], backgroundColor:"#F5C518"}]},
-      options: {responsive:true, plugins:{legend:{labels:{color:"#666"}}}, scales:{x:{ticks:{color:"#666"},grid:{color:"#1e1e1e"}},y:{ticks:{color:"#666"},grid:{color:"#1e1e1e"},beginAtZero:true}}}
+      data: {labels: ["Avg Score","Sessions"], datasets: [{label:nA, data:[+avgA.toFixed(2),recA.length], backgroundColor:"#06b6d4"},{label:nB, data:[+avgB.toFixed(2),recB.length], backgroundColor:"#f59e0b"}]},
+      options: {responsive:true, plugins:{legend:{labels:{color:"#4a6080",font:{family:"Outfit"}}}}, scales:{x:{ticks:{color:"#4a6080"},grid:{color:"rgba(30,45,74,.4)"}},y:{ticks:{color:"#4a6080"},grid:{color:"rgba(30,45,74,.4)"},beginAtZero:true}}}
     });
     btn.textContent = "COMPARE"; btn.disabled = false;
   })
