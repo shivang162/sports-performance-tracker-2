@@ -59,13 +59,13 @@ is created automatically when the server starts for the first time.
 
 ### Step 1 — Test DB connection (optional)
 ```bash
-make test-db
+run TestDB.java
 ```
 You should see: `Connected to SQLite ✅`
 
 ### Step 2 — Run the server
 ```bash
-make run
+run Main.java
 ```
 Or in VS Code, add the JARs in `lib/` to your Java build path and run `Main.java`.
 
