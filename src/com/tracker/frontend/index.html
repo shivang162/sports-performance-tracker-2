@@ -507,7 +507,7 @@ tbody tr:hover td{background:rgba(6,182,212,.03)}
     <!-- Stat Cards -->
     <div class="stat-cards">
       <div class="stat-card">
-        <span class="stat-card-icon">🏋️</span>
+        <span class="stat-card-icon" id="statCardSessionIcon">🏃</span>
         <div class="stat-label">Sessions</div>
         <div class="stat-value yellow" id="totalSessions">—</div>
       </div>
@@ -523,12 +523,12 @@ tbody tr:hover td{background:rgba(6,182,212,.03)}
       </div>
       <div class="stat-card">
         <span class="stat-card-icon">⚡</span>
-        <div class="stat-label">Avg Speed</div>
+        <div class="stat-label" id="statLabelAvgSpeed">Avg Speed (m/s)</div>
         <div class="stat-value green" id="avgSpeed">0.00</div>
       </div>
       <div class="stat-card">
         <span class="stat-card-icon">🏆</span>
-        <div class="stat-label">Best Speed</div>
+        <div class="stat-label" id="statLabelBestSpeed">Best Speed (m/s)</div>
         <div class="stat-value green" id="bestSpeed">0.00</div>
       </div>
     </div>
@@ -665,7 +665,7 @@ tbody tr:hover td{background:rgba(6,182,212,.03)}
     <!-- Stat Cards -->
     <div class="stat-cards">
       <div class="stat-card">
-        <span class="stat-card-icon">🏋️</span>
+        <span class="stat-card-icon" id="aStatCardSessionIcon">🏃</span>
         <div class="stat-label">Total Sessions</div>
         <div class="stat-value yellow" id="aTotalSessions">—</div>
       </div>
@@ -1041,6 +1041,11 @@ function onSportChange() {
     setEl("lblM2", cfg.m2);
     setPlaceholder("m2Input", cfg.m2Ph);
   }
+  // Update stat card icon and speed metric labels to reflect the selected sport
+  var sportIcon = SPORT_ICONS[sport] || "🏅";
+  setEl("statCardSessionIcon", sportIcon);
+  setEl("statLabelAvgSpeed",  "Avg " + cfg.speed);
+  setEl("statLabelBestSpeed", "Best " + cfg.speed);
   updateSportPanel(sport, "sportPanelTitle", "sportPanelContent");
   fetchDashboard();
   updateUI();
@@ -1292,6 +1297,8 @@ function aOnSportChange() {
   var el;
   el = document.getElementById("aThDist");  if (el) el.textContent = cfg.dist.split(" ")[0];
   el = document.getElementById("aThSpeed"); if (el) el.textContent = cfg.speed;
+  // Update sessions icon to match the selected sport
+  el = document.getElementById("aStatCardSessionIcon"); if (el) el.textContent = SPORT_ICONS[sport] || "🏅";
   updateSportPanel(sport, "aSportPanelTitle", "aSportPanelContent");
   aFetchDashboard();
   aFetchRecords();
