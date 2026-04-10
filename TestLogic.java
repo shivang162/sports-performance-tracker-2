@@ -22,9 +22,11 @@ public class TestLogic {
 
         System.out.println("=== PerformanceService ===");
         System.out.println("1. calculateScore(Running,90,50,75)    = " + ps.calculateScore(90,50,75,"Running"));
-        // Running weights 60/20/20 → expected: (90*0.6)+(50*0.2)+(75*0.2) = 54+10+15 = 79.0
+        // Running weights 60/40/0, maxSpeed=10.5 → normSpd=min(90/10.5*100,100)=100
+        // expected: (100*0.6)+(50*0.4)+(75*0.0) = 60+20+0 = 80.0
         System.out.println("   calculateScore(Basketball,90,50,75) = " + ps.calculateScore(90,50,75,"Basketball"));
-        // Basketball weights 20/50/30 → expected: (90*0.2)+(50*0.5)+(75*0.3) = 18+25+22.5 = 65.5
+        // Basketball weights 0/55/45, maxSpeed=1.0 → normSpd=min(90/1.0*100,100)=100
+        // expected: (100*0.0)+(50*0.55)+(75*0.45) = 0+27.5+33.75 = 61.25
 
         System.out.println("2. calculateAverage            = " + ps.calculateAverage(improving));
         // Expected: 75.0
