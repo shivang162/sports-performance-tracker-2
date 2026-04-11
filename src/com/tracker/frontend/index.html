@@ -379,7 +379,7 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
   border-radius:5px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:all .2s;
 }
 .remember input:checked{background:var(--purple);border-color:var(--purple)}
-.remember input:checked::after{content:'\2713';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
+.remember input:checked::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
 .forgot{font-size:13px;color:var(--muted2);text-decoration:none;font-weight:500;transition:color .2s}
 .forgot:hover{color:var(--violet)}
 .btn-login{
@@ -1494,7 +1494,7 @@ function aFetchRecords() {
       latestEl.innerHTML =
         "<div style='display:flex;flex-direction:column;gap:10px'>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Sport</span><span>" + escapeHtml(last.sport) + "</span></div>" +
-        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted2)'>Score</span><span style='color:var(--violet);font-family:Space Grotesk,sans-serif;font-size:32px;font-weight:800'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
+        "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted2)'>Score</span><span style='color:var(--violet);font-family:\"Space Grotesk\",sans-serif;font-size:32px;font-weight:800'>" + parseFloat(last.score).toFixed(1) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between;align-items:center'><span style='color:var(--muted)'>Level</span><span class='level-badge " + aLevelClass(last.level) + "' style='font-size:11px;padding:3px 10px'>" + lLvl + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Speed</span><span>" + parseFloat(last.speed).toFixed(2) + "</span></div>" +
         "<div style='display:flex;justify-content:space-between'><span style='color:var(--muted)'>Efficiency</span><span>" + parseFloat(last.accuracy).toFixed(1) + "%</span></div>" +
