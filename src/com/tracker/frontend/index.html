@@ -54,6 +54,8 @@ body{
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes drift{0%{background-position:0 0}100%{background-position:180px 0}}
+@keyframes streakFloat{0%,100%{opacity:.55;transform:var(--sk) translateX(0)}50%{opacity:.85;transform:var(--sk) translateX(36px)}}
+@keyframes gridFade{0%,100%{opacity:.3}50%{opacity:.55}}
 @keyframes lanePulse{0%,100%{opacity:.2;transform:scaleX(.96)}50%{opacity:.7;transform:scaleX(1)}}
 @keyframes spark{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-10px);opacity:.9}}
 
@@ -593,9 +595,36 @@ nav::after{
     radial-gradient(circle at 54% 100%,rgba(57,255,136,.16) 0%,transparent 36%),
     linear-gradient(120deg,rgba(0,200,255,.06),rgba(57,255,136,.04),rgba(255,100,50,.06));
 }
-.orb-1{background:rgba(0,145,255,.2)}
-.orb-2{background:rgba(0,229,255,.2)}
-.orb-3{background:rgba(255,100,50,.2)}
+/* Orbs replaced with athletic speed-streak bars */
+.orb{
+  border-radius:3px;filter:blur(32px);
+  animation:streakFloat 10s ease-in-out infinite;pointer-events:none;
+}
+.orb-1{
+  width:700px;height:86px;
+  background:linear-gradient(90deg,transparent 0%,rgba(0,155,255,.55) 40%,rgba(0,220,255,.42) 65%,transparent 100%);
+  top:20%;left:-220px;--sk:rotate(-14deg);transform:var(--sk);
+  animation-delay:0s;
+}
+.orb-2{
+  width:580px;height:70px;
+  background:linear-gradient(90deg,transparent 0%,rgba(255,80,40,.48) 40%,rgba(255,140,60,.4) 65%,transparent 100%);
+  bottom:18%;right:-190px;--sk:rotate(-16deg);transform:var(--sk);
+  animation-delay:-3.8s;
+}
+.orb-3{
+  width:420px;height:56px;
+  background:linear-gradient(90deg,transparent 0%,rgba(40,255,120,.45) 40%,rgba(100,255,165,.36) 65%,transparent 100%);
+  top:53%;left:8%;--sk:rotate(9deg);transform:var(--sk);
+  animation-delay:-7s;
+}
+/* Dot-grid overlay replaces animated diagonal stripes */
+.login-bg::after{
+  content:'';position:absolute;inset:0;
+  background-image:radial-gradient(circle,rgba(0,200,255,.26) 1.5px,transparent 1.5px);
+  background-size:38px 38px;
+  animation:gridFade 8s ease-in-out infinite;
+}
 .logo-icon,.btn-login{background:linear-gradient(115deg,#0f8dff 0%,#00c8ff 55%,#ff6a2a 100%)}
 .headline span{background:linear-gradient(90deg,#24b8ff 0%,#21f2ff 52%,#ff9550 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .brand::after{
