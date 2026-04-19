@@ -381,12 +381,13 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
 }
 .headline span{background:linear-gradient(90deg,#38bdf8 0%,#a78bfa 45%,#fb923c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
 .brand-sub{font-size:14px;color:#d3ddff;line-height:1.7;max-width:450px;margin-bottom:26px;font-weight:500}
-.hero-flags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.hero-flags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;list-style:none;padding:0}
 .hero-flag{
   display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
   border:1px solid rgba(255,255,255,.18);font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
   background:rgba(7,7,15,.3);color:#dbeafe;
 }
+.hero-flag .icon{font-size:11px;line-height:1}
 .hero-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:26px}
 .hero-metric{
   border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:10px 12px;background:rgba(9,12,31,.45);
@@ -572,6 +573,9 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
   .stat-cards{grid-template-columns:1fr 1fr}
   .task-form-row{grid-template-columns:1fr 1fr}
 }
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
@@ -590,39 +594,39 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
             <div class="logo-text">PULSE</div>
             <span class="pro-badge">Pro</span>
           </div>
-          <div class="hero-flags">
-            <span class="hero-flag">&#127939; Athletic Intelligence</span>
-            <span class="hero-flag">&#127942; Peak Mode</span>
-            <span class="hero-flag">&#128200; Live Metrics</span>
-          </div>
+          <ul class="hero-flags">
+            <li class="hero-flag"><span class="icon" aria-hidden="true">&#127939;</span> Athletic Intelligence</li>
+            <li class="hero-flag"><span class="icon" aria-hidden="true">&#127942;</span> Peak Mode</li>
+            <li class="hero-flag"><span class="icon" aria-hidden="true">&#128200;</span> Live Metrics</li>
+          </ul>
           <div class="headline">
             PUSH.<br>PERFORM.<br><span>PREVAIL.</span>
           </div>
           <p class="brand-sub">Elevate every training session with real-time sports analytics, momentum insights, and high-performance coaching tools built for winning teams.</p>
           <div class="hero-metrics">
             <div class="hero-metric">
-              <div class="hero-metric-l">Avg Sprint Gain</div>
-              <div class="hero-metric-v">+19%</div>
+              <div class="hero-metric-l" id="metricSprintLabel">Avg Sprint Gain</div>
+              <div class="hero-metric-v" aria-labelledby="metricSprintLabel">+19%</div>
             </div>
             <div class="hero-metric">
-              <div class="hero-metric-l">Recovery Readiness</div>
-              <div class="hero-metric-v">94</div>
+              <div class="hero-metric-l" id="metricRecoveryLabel">Recovery Readiness</div>
+              <div class="hero-metric-v" aria-labelledby="metricRecoveryLabel">94</div>
             </div>
           </div>
           <div class="hero-tracks">
             <div class="hero-track">
               <span class="track-name">Explosiveness</span>
-              <span class="track-lane"><span class="track-fill orange"></span></span>
+              <span class="track-lane" role="progressbar" aria-label="Explosiveness" aria-valuenow="91" aria-valuemin="0" aria-valuemax="100" aria-valuetext="91%"><span class="track-fill orange"></span></span>
               <span class="track-pct">91%</span>
             </div>
             <div class="hero-track">
               <span class="track-name">Accuracy</span>
-              <span class="track-lane"><span class="track-fill purple"></span></span>
+              <span class="track-lane" role="progressbar" aria-label="Accuracy" aria-valuenow="74" aria-valuemin="0" aria-valuemax="100" aria-valuetext="74%"><span class="track-fill purple"></span></span>
               <span class="track-pct">74%</span>
             </div>
             <div class="hero-track">
               <span class="track-name">Endurance</span>
-              <span class="track-lane"><span class="track-fill blue"></span></span>
+              <span class="track-lane" role="progressbar" aria-label="Endurance" aria-valuenow="82" aria-valuemin="0" aria-valuemax="100" aria-valuetext="82%"><span class="track-fill blue"></span></span>
               <span class="track-pct">82%</span>
             </div>
           </div>
@@ -647,14 +651,14 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
         <div class="field lf">
           <label>Email address</label>
           <div class="field-wrap">
-            <span class="field-icon">&#128100;</span>
+            <span class="field-icon" aria-hidden="true">&#128100;</span>
             <input type="email" id="username" placeholder="coach@example.com" autocomplete="username">
           </div>
         </div>
         <div class="field lf">
           <label>Password</label>
           <div class="field-wrap">
-            <span class="field-icon">&#128274;</span>
+            <span class="field-icon" aria-hidden="true">&#128274;</span>
             <input type="password" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
           </div>
         </div>
