@@ -52,6 +52,9 @@ body{
 @keyframes slideUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
+@keyframes drift{0%{background-position:0 0}100%{background-position:180px 0}}
+@keyframes lanePulse{0%,100%{opacity:.2;transform:scaleX(.96)}50%{opacity:.7;transform:scaleX(1)}}
+@keyframes spark{0%,100%{transform:translateY(0);opacity:.35}50%{transform:translateY(-10px);opacity:.9}}
 
 /* ── Navigation ─────────────────────────────────────────────── */
 nav{
@@ -324,84 +327,156 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
 /* ── Auth pages background ──────────────────────────────────── */
 .login-bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .login-bg::before{
-  content:'';position:absolute;inset:0;
-  background-image:linear-gradient(rgba(124,58,237,0.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(124,58,237,0.025) 1px,transparent 1px);
-  background-size:60px 60px;
+  content:'';position:absolute;inset:0;background:
+    radial-gradient(circle at 22% 18%,rgba(56,189,248,.18) 0%,transparent 32%),
+    radial-gradient(circle at 84% 75%,rgba(249,115,22,.12) 0%,transparent 30%),
+    radial-gradient(circle at 54% 100%,rgba(124,58,237,.18) 0%,transparent 36%),
+    linear-gradient(120deg,rgba(56,189,248,.04),rgba(124,58,237,.02),rgba(249,115,22,.04));
 }
 .login-bg::after{
-  content:'';position:absolute;width:800px;height:800px;
-  background:radial-gradient(circle,rgba(124,58,237,0.07) 0%,transparent 65%);
-  top:50%;left:50%;transform:translate(-50%,-50%);animation:pulse 6s ease-in-out infinite;
+  content:'';position:absolute;inset:-25%;
+  background:repeating-linear-gradient(108deg,transparent 0 72px,rgba(255,255,255,.02) 72px 78px,transparent 78px 140px);
+  animation:drift 14s linear infinite;
 }
-.orb{position:absolute;border-radius:50%;filter:blur(90px);animation:floatOrb 16s ease-in-out infinite;pointer-events:none}
-.orb-1{width:500px;height:500px;background:rgba(124,58,237,0.06);top:-180px;left:-100px;animation-delay:0s}
-.orb-2{width:380px;height:380px;background:rgba(59,130,246,0.04);bottom:-120px;right:-80px;animation-delay:-6s}
-.orb-3{width:280px;height:280px;background:rgba(20,184,166,0.04);top:30%;right:8%;animation-delay:-11s}
+.orb{position:absolute;border-radius:50%;filter:blur(72px);animation:floatOrb 13s ease-in-out infinite;pointer-events:none}
+.orb-1{width:520px;height:520px;background:rgba(124,58,237,.18);top:-240px;left:-160px;animation-delay:0s}
+.orb-2{width:420px;height:420px;background:rgba(56,189,248,.16);bottom:-190px;right:-110px;animation-delay:-4s}
+.orb-3{width:280px;height:280px;background:rgba(249,115,22,.16);top:26%;right:18%;animation-delay:-8s}
 
 /* ── Login page ─────────────────────────────────────────────── */
-.login-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:40px 20px}
-.login-inner{display:grid;grid-template-columns:1fr 1px 400px;max-width:880px;width:100%;animation:slideUp .7s cubic-bezier(.16,1,.3,1) both}
-.brand{padding:64px 56px 64px 0;display:flex;flex-direction:column;justify-content:space-between}
-.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:44px}
+.login-outer{position:relative;z-index:10;display:flex;min-height:100vh;align-items:center;justify-content:center;padding:44px 20px}
+.login-inner{
+  position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,430px);gap:34px;
+  max-width:1080px;width:100%;animation:slideUp .7s cubic-bezier(.16,1,.3,1) both;
+}
+.brand{
+  border:1px solid rgba(255,255,255,.14);border-radius:28px;padding:38px 34px 34px;
+  background:linear-gradient(165deg,rgba(255,255,255,.16),rgba(255,255,255,.05) 58%,rgba(255,255,255,.03));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  box-shadow:0 28px 80px rgba(2,6,23,.55),inset 0 1px 0 rgba(255,255,255,.25);
+  display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;
+}
+.brand::before{
+  content:'';position:absolute;left:28px;right:28px;bottom:126px;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.23),transparent);
+}
+.brand::after{
+  content:'';position:absolute;left:20px;right:20px;bottom:54px;height:5px;
+  border-radius:999px;background:linear-gradient(90deg,rgba(14,165,233,.2),rgba(124,58,237,.5),rgba(249,115,22,.32));
+  animation:lanePulse 2.8s ease-in-out infinite;
+}
+.logo-row{display:flex;align-items:center;gap:12px;margin-bottom:30px}
 .logo-icon{
-  width:48px;height:48px;background:var(--grad-primary);border-radius:14px;
-  display:grid;place-items:center;font-size:22px;
-  box-shadow:0 0 28px var(--glow-purple),inset 0 1px 0 rgba(255,255,255,0.18);
+  width:52px;height:52px;border-radius:16px;display:grid;place-items:center;font-size:23px;
+  background:linear-gradient(135deg,#0ea5e9 0%,#7c3aed 65%,#f97316 100%);
+  box-shadow:0 0 34px rgba(56,189,248,.28),0 0 44px rgba(124,58,237,.34),inset 0 1px 0 rgba(255,255,255,.3);
 }
 .logo-text{
-  font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;letter-spacing:.2px;
-  background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:800;letter-spacing:.4px;
+  background:linear-gradient(90deg,#e0f2fe 0%,#c4b5fd 45%,#fdba74 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
 }
 .headline{
   font-family:'Space Grotesk',sans-serif;
-  font-size:clamp(48px,5.5vw,76px);font-weight:800;line-height:.95;letter-spacing:-1.5px;margin-bottom:24px;
+  font-size:clamp(40px,5vw,66px);font-weight:800;line-height:.95;letter-spacing:-1.5px;margin-bottom:18px;
 }
-.headline span{background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
-.brand-sub{font-size:15px;color:var(--muted2);line-height:1.75;max-width:280px;margin-bottom:48px;font-weight:400}
-.brand-stats{display:flex;gap:36px}
+.headline span{background:linear-gradient(90deg,#38bdf8 0%,#a78bfa 45%,#fb923c 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;display:block}
+.brand-sub{font-size:14px;color:#d3ddff;line-height:1.7;max-width:450px;margin-bottom:26px;font-weight:500}
+.hero-flags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+.hero-flag{
+  display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);font-size:10px;font-weight:700;letter-spacing:.7px;text-transform:uppercase;
+  background:rgba(7,7,15,.3);color:#dbeafe;
+}
+.hero-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:26px}
+.hero-metric{
+  border:1px solid rgba(255,255,255,.16);border-radius:12px;padding:10px 12px;background:rgba(9,12,31,.45);
+}
+.hero-metric-l{font-size:10px;letter-spacing:.7px;font-weight:700;text-transform:uppercase;color:#9db0e7}
+.hero-metric-v{font-family:'Space Grotesk',sans-serif;font-size:24px;font-weight:800;line-height:1;margin-top:4px;color:#ecfeff}
+.hero-tracks{display:flex;flex-direction:column;gap:10px}
+.hero-track{display:flex;align-items:center;gap:10px}
+.track-name{font-size:11px;color:#c7d2fe;font-weight:600;letter-spacing:.3px;width:112px;flex-shrink:0}
+.track-lane{flex:1;height:6px;border-radius:999px;background:rgba(255,255,255,.14);position:relative;overflow:hidden}
+.track-fill{height:100%;border-radius:inherit;display:block}
+.track-fill.blue{width:82%;background:linear-gradient(90deg,#38bdf8,#22d3ee)}
+.track-fill.purple{width:74%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)}
+.track-fill.orange{width:91%;background:linear-gradient(90deg,#fb923c,#f97316)}
+.track-pct{font-size:11px;color:#f8fafc;font-weight:700}
+.brand-stats{display:flex;gap:24px;margin-top:30px}
 .stat-n{
-  font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.5px;
-  background:var(--grad-primary);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  font-family:'Space Grotesk',sans-serif;font-size:31px;font-weight:800;letter-spacing:-.5px;
+  color:#f8fafc;text-shadow:0 0 24px rgba(56,189,248,.35);
 }
-.stat-l-sm{font-size:11px;font-weight:600;color:var(--muted2);text-transform:uppercase;letter-spacing:.8px;margin-top:2px}
-.vdiv{background:linear-gradient(to bottom,transparent,var(--border2),transparent);width:1px}
-.login-form{padding:64px 0 64px 56px}
-.form-title{font-family:'Space Grotesk',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px;color:var(--text)}
-.form-sub{font-size:13px;color:var(--muted2);margin-bottom:36px;font-weight:400}
-.field.lf{margin-bottom:18px;position:relative}
-.field.lf input{background:rgba(255,255,255,0.04);padding:14px 16px;border-radius:10px}
-.field-icon{position:absolute;right:14px;bottom:13px;font-size:16px;pointer-events:none;opacity:.2}
-.login-row{display:flex;align-items:center;justify-content:space-between;margin:-4px 0 28px}
-.remember{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted2);cursor:pointer;font-weight:500}
+.stat-l-sm{font-size:10px;font-weight:700;color:#96a8d8;text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+.vdiv{display:none}
+.login-form{
+  border:1px solid rgba(255,255,255,.15);border-radius:26px;padding:34px 30px;
+  background:linear-gradient(165deg,rgba(9,13,35,.84) 0%,rgba(10,12,27,.72) 58%,rgba(8,10,20,.8) 100%);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  box-shadow:0 20px 65px rgba(2,6,23,.62),inset 0 1px 0 rgba(255,255,255,.2);position:relative;
+}
+.login-form::before{
+  content:'';position:absolute;inset:-1px;border-radius:inherit;
+  border:1px solid transparent;
+  background:linear-gradient(120deg,rgba(56,189,248,.45),rgba(124,58,237,.45),rgba(249,115,22,.32)) border-box;
+  -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+  -webkit-mask-composite:xor;mask-composite:exclude;opacity:.7;pointer-events:none;
+}
+.form-title{font-family:'Space Grotesk',sans-serif;font-size:31px;font-weight:800;letter-spacing:-.5px;margin-bottom:4px;color:#f8fafc}
+.form-sub{font-size:13px;color:#a6b7e7;margin-bottom:24px;font-weight:500}
+.field.lf{margin-bottom:14px}
+.field.lf label{font-size:10px;color:#9db0e7}
+.field-wrap{position:relative}
+.field.lf input{
+  border-radius:12px;background:rgba(15,23,42,.78);border:1px solid rgba(148,163,184,.25);
+  padding:14px 14px 14px 44px;color:#e2e8f0;transition:all .2s;
+}
+.field-icon{
+  position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;
+  pointer-events:none;opacity:.68;filter:drop-shadow(0 0 10px rgba(56,189,248,.3));
+}
+.field.lf:focus-within .field-icon{opacity:1;animation:spark .7s ease}
+.field.lf input:focus{
+  border-color:rgba(56,189,248,.6);box-shadow:0 0 0 3px rgba(56,189,248,.16),0 8px 22px rgba(14,116,144,.22);
+  background:rgba(15,23,42,.92);
+}
+.login-row{display:flex;align-items:center;justify-content:space-between;margin:6px 0 24px}
+.remember{display:flex;align-items:center;gap:8px;font-size:12px;color:#a6b7e7;cursor:pointer;font-weight:600}
 .remember input[type=checkbox]{
-  appearance:none;width:16px;height:16px;border:1px solid var(--border2);
-  border-radius:5px;background:var(--card);cursor:pointer;position:relative;flex-shrink:0;transition:all .2s;
+  appearance:none;width:18px;height:18px;border:1px solid rgba(148,163,184,.5);
+  border-radius:6px;background:rgba(15,23,42,.82);cursor:pointer;position:relative;flex-shrink:0;transition:all .2s;
 }
-.remember input:checked{background:var(--purple);border-color:var(--purple)}
-.remember input:checked::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:800}
-.forgot{font-size:13px;color:var(--muted2);text-decoration:none;font-weight:500;transition:color .2s}
-.forgot:hover{color:var(--violet)}
+.remember input:checked{background:linear-gradient(135deg,#0ea5e9 0%,#7c3aed 58%,#f97316 100%);border-color:transparent}
+.remember input:checked::after{content:'✓';position:absolute;inset:0;display:grid;place-items:center;color:#fff;font-size:11px;font-weight:800}
+.forgot{font-size:12px;color:#a6b7e7;text-decoration:none;font-weight:600;transition:color .2s}
+.forgot:hover{color:#67e8f9}
 .btn-login{
-  width:100%;background:var(--grad-primary);color:#fff;border:none;
-  border-radius:10px;padding:14px;font-family:'Inter',sans-serif;
-  font-size:15px;font-weight:600;letter-spacing:.2px;cursor:pointer;
-  transition:all .25s;box-shadow:0 4px 24px rgba(124,58,237,0.38);
+  width:100%;background:linear-gradient(115deg,#0ea5e9 0%,#7c3aed 55%,#f97316 100%);color:#fff;border:none;
+  border-radius:12px;padding:14px;font-family:'Inter',sans-serif;
+  font-size:14px;font-weight:700;letter-spacing:.4px;cursor:pointer;
+  transition:all .2s;box-shadow:0 14px 28px rgba(37,99,235,.38);
+  text-transform:uppercase;
 }
-.btn-login:hover{transform:translateY(-1px);box-shadow:0 8px 36px rgba(124,58,237,0.54)}
-.btn-login:active{transform:scale(.98)}
-.btn-login:disabled{opacity:.5;cursor:not-allowed;box-shadow:none;transform:none}
-.divider{display:flex;align-items:center;gap:12px;margin:24px 0;color:var(--muted);font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px}
-.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-login:hover{transform:translateY(-2px);box-shadow:0 18px 36px rgba(79,70,229,.45)}
+.btn-login:active{transform:translateY(1px) scale(.99)}
+.btn-login:disabled{
+  opacity:.88;cursor:not-allowed;box-shadow:none;transform:none;
+  background-size:220% 100%;animation:drift 1.2s linear infinite;
+}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#8da0d3;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:rgba(148,163,184,.3)}
 .btn-guest{
-  width:100%;background:transparent;color:var(--muted2);border:1px solid var(--border2);
-  border-radius:10px;padding:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:500;
+  width:100%;background:rgba(15,23,42,.5);color:#cdd8fb;border:1px solid rgba(148,163,184,.32);
+  border-radius:12px;padding:12px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;
   cursor:pointer;transition:all .25s;
 }
-.btn-guest:hover{border-color:rgba(124,58,237,0.35);color:var(--text);background:rgba(124,58,237,0.05)}
-.page-link{display:block;text-align:center;margin-top:18px;font-size:13px;color:var(--muted2);cursor:pointer;transition:color .2s;font-weight:500}
-.page-link:hover{color:var(--violet)}
-.msg{border-radius:10px;padding:11px 14px;font-size:13px;font-weight:500;margin-bottom:16px;display:none}
+.btn-guest:hover{
+  border-color:rgba(56,189,248,.5);color:#eff6ff;background:linear-gradient(120deg,rgba(56,189,248,.15),rgba(124,58,237,.16));
+  transform:translateY(-1px);
+}
+.page-link{display:block;text-align:center;margin-top:16px;font-size:12px;color:#a6b7e7;cursor:pointer;transition:color .2s;font-weight:500}
+.page-link:hover{color:#67e8f9}
+.msg{border-radius:12px;padding:11px 14px;font-size:12px;font-weight:600;margin-bottom:14px;display:none}
 .msg.show{display:block}
 .msg-err{background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.25);color:var(--rose);animation:shake .35s ease}
 .msg-suc{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);color:var(--emerald)}
@@ -487,9 +562,13 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
   .grid,.result-grid,.input-row{grid-template-columns:1fr}
   nav{padding:0 18px}
   main{padding:24px 16px}
-  .login-inner{grid-template-columns:1fr;max-width:420px}
-  .brand,.vdiv{display:none}
-  .login-form{padding:48px 0}
+  .login-inner{grid-template-columns:1fr;max-width:420px;gap:18px}
+  .brand{padding:26px}
+  .brand::before,.brand::after{display:none}
+  .hero-metrics{grid-template-columns:1fr 1fr}
+  .brand-stats{margin-top:20px}
+  .track-name{width:95px}
+  .login-form{padding:28px 22px}
   .stat-cards{grid-template-columns:1fr 1fr}
   .task-form-row{grid-template-columns:1fr 1fr}
 }
@@ -511,10 +590,42 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
             <div class="logo-text">PULSE</div>
             <span class="pro-badge">Pro</span>
           </div>
-          <div class="headline">
-            TRAIN.<br>MEASURE.<br><span>EXCEL.</span>
+          <div class="hero-flags">
+            <span class="hero-flag">&#127939; Athletic Intelligence</span>
+            <span class="hero-flag">&#127942; Peak Mode</span>
+            <span class="hero-flag">&#128200; Live Metrics</span>
           </div>
-          <p class="brand-sub">The intelligent sports performance platform for elite athletes and coaches. Data-driven insights to unlock your full potential.</p>
+          <div class="headline">
+            PUSH.<br>PERFORM.<br><span>PREVAIL.</span>
+          </div>
+          <p class="brand-sub">Elevate every training session with real-time sports analytics, momentum insights, and high-performance coaching tools built for winning teams.</p>
+          <div class="hero-metrics">
+            <div class="hero-metric">
+              <div class="hero-metric-l">Avg Sprint Gain</div>
+              <div class="hero-metric-v">+19%</div>
+            </div>
+            <div class="hero-metric">
+              <div class="hero-metric-l">Recovery Readiness</div>
+              <div class="hero-metric-v">94</div>
+            </div>
+          </div>
+          <div class="hero-tracks">
+            <div class="hero-track">
+              <span class="track-name">Explosiveness</span>
+              <span class="track-lane"><span class="track-fill orange"></span></span>
+              <span class="track-pct">91%</span>
+            </div>
+            <div class="hero-track">
+              <span class="track-name">Accuracy</span>
+              <span class="track-lane"><span class="track-fill purple"></span></span>
+              <span class="track-pct">74%</span>
+            </div>
+            <div class="hero-track">
+              <span class="track-name">Endurance</span>
+              <span class="track-lane"><span class="track-fill blue"></span></span>
+              <span class="track-pct">82%</span>
+            </div>
+          </div>
         </div>
         <div class="brand-stats">
           <div style="display:flex;flex-direction:column;gap:4px">
@@ -528,29 +639,32 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
           </div>
         </div>
       </div>
-      <div class="vdiv"></div>
       <div class="login-form">
         <div class="form-title">Welcome back</div>
-        <p class="form-sub">Sign in to continue your journey</p>
+        <p class="form-sub">Sign in and keep your performance streak alive.</p>
         <div class="msg msg-err" id="loginErrMsg"></div>
         <div class="msg msg-suc" id="loginSucMsg"></div>
         <div class="field lf">
           <label>Email address</label>
-          <input type="email" id="username" placeholder="coach@example.com" autocomplete="username">
-          <span class="field-icon">&#128100;</span>
+          <div class="field-wrap">
+            <span class="field-icon">&#128100;</span>
+            <input type="email" id="username" placeholder="coach@example.com" autocomplete="username">
+          </div>
         </div>
         <div class="field lf">
           <label>Password</label>
-          <input type="password" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
-          <span class="field-icon">&#128274;</span>
+          <div class="field-wrap">
+            <span class="field-icon">&#128274;</span>
+            <input type="password" id="password" placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;" autocomplete="current-password">
+          </div>
         </div>
         <div class="login-row">
-          <label class="remember"><input type="checkbox" id="remember"> Keep me signed in</label>
+          <label class="remember"><input type="checkbox" id="remember"> Stay in race mode</label>
           <a href="#" class="forgot">Forgot password?</a>
         </div>
         <button class="btn-login" onclick="login()" id="loginBtn">Sign In</button>
         <div class="divider">or</div>
-        <button class="btn-guest" onclick="guestLogin()">Continue as Guest &#8594;</button>
+        <button class="btn-guest" onclick="guestLogin()">Quick Start as Guest &#8594;</button>
         <span class="page-link" onclick="showPage('register')">Don't have an account? <strong style="color:var(--violet)">Create one</strong></span>
       </div>
     </div>
