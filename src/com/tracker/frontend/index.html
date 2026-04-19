@@ -29,6 +29,7 @@
   /* Glows */
   --glow-purple:rgba(15,141,255,0.3);--glow-blue:rgba(33,242,255,0.2);
   --glow-teal:rgba(57,255,136,0.2);--glow-emerald:rgba(57,255,136,0.2);
+  --nav-height:64px;
   /* Legacy aliases kept for JS-injected HTML */
   --accent:#0f8dff;--green:#39ff88;--red:#ff4747;--gold:#ff9b2f;
 }
@@ -87,7 +88,7 @@ body{
 /* ── Navigation ─────────────────────────────────────────────── */
 nav{
   display:flex;align-items:center;justify-content:space-between;
-  padding:0 36px;height:64px;
+  padding:0 36px;height:var(--nav-height);
   border-bottom:1px solid var(--border);
   position:sticky;top:0;z-index:100;
   background:rgba(7,7,15,0.82);
@@ -473,7 +474,7 @@ tbody tr:hover td{background:rgba(124,58,237,0.04)}
 #page-dashboard,#page-athlete{position:relative}
 #page-dashboard nav,#page-dashboard main,#page-athlete nav,#page-athlete main{position:relative;z-index:3}
 .dashboard-visuals{
-  position:fixed;inset:64px 0 0;pointer-events:none;z-index:1;overflow:hidden;
+  position:fixed;inset:var(--nav-height) 0 0;pointer-events:none;z-index:1;overflow:hidden;
 }
 .dash-ball,.dash-icon,.dash-runner{
   position:absolute;display:grid;place-items:center;line-height:1;
