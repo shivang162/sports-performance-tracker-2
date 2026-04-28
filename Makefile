@@ -14,12 +14,13 @@ all: compile compile-logic compile-db
 
 ## Compile the main application sources
 compile:
-	mkdir -p $(OUT_DIR)
+	mkdir -p $(OUT_DIR)/frontend
 	javac -cp $(JAR) -d $(OUT_DIR) \
 	    $(SRC_DIR)/com/tracker/dao/*.java \
 	    $(SRC_DIR)/com/tracker/service/*.java \
 	    $(SRC_DIR)/com/tracker/controller/*.java \
 	    $(SRC_DIR)/com/tracker/Main.java
+	cp $(SRC_DIR)/com/tracker/frontend/index.html $(OUT_DIR)/frontend/index.html
 
 ## Compile TestDB.java (database connection smoke-test)
 compile-db:

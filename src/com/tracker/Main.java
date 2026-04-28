@@ -3,7 +3,9 @@ package com.tracker;
 import com.sun.net.httpserver.HttpServer;
 import com.tracker.controller.*;
 import com.tracker.dao.DBConnection;
+import java.awt.Desktop;
 import java.net.InetSocketAddress;
+import java.net.URI;
 
 /**
  * Application entry point.
@@ -37,6 +39,7 @@ public class Main {
         }
 
         HttpServer server = HttpServer.create(new InetSocketAddress(8080), 0);
+        server.createContext("/",          new FrontendController());
         server.createContext("/login",     new AuthController());
         server.createContext("/register",  new RegisterController());
         server.createContext("/save",      new PerformanceController());
@@ -62,6 +65,24 @@ public class Main {
         System.out.println("  GET  /tasks     — list tasks (coach or athlete)");
         System.out.println("  POST /tasks     — create task");
         System.out.println("  POST /tasks/update — update task status");
-        System.out.println("\nOpen frontend/index.html in your browser.");
+        System.out.println("\nOpening http://localhost:8080 in your browser...");
+
+        try {
+            if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
+                Desktop.getDesktop().browse(new URI("http://localhost:8080"));
+            } else {
+                String os = System.getProperty("os.name").toLowerCase();
+                if (os.contains("win")) {
+                    new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", "http://localhost:8080").start();
+                } else if (os.contains("mac")) {
+                    new ProcessBuilder("open", "http://localhost:8080").start();
+                } else {
+                    new ProcessBuilder("xdg-open", "http://localhost:8080").start();
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("[Main] Could not open browser automatically: " + e.getMessage());
+            System.out.println("       Please open http://localhost:8080 manually.");
+        }
     }
 }
